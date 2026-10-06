@@ -3,7 +3,67 @@ guid: 381a001c291b749909b69dca4bc1d181
 ModelImporter:
   serializedVersion: 24300
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Mat_Backbone_A
+    second: {fileID: 2100000, guid: 376421d4e957b4b249cba90943df3541, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Mat_Backbone_B
+    second: {fileID: 2100000, guid: 099725effa15f4492930c8b66ff98941, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Mat_Base_A
+    second: {fileID: 2100000, guid: 71db2aad573d04780be4ba78294da19e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Mat_Base_C
+    second: {fileID: 2100000, guid: 454b1abc5875149338cbdbea66818eb3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Mat_Base_G
+    second: {fileID: 2100000, guid: 807b9da25da7c48e0b8ae7b11d2f256b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Mat_Base_T
+    second: {fileID: 2100000, guid: 130e49b234df34b7e88f0a931f452e2b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Mat_Cap_5prime
+    second: {fileID: 2100000, guid: 39f9fb79b102543a9a17ed4ae43572b3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Mat_Phosphate
+    second: {fileID: 2100000, guid: 6319068e5748d4364ae9acf0be76387d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Mat_Primer_Backbone
+    second: {fileID: 2100000, guid: e2133cb9bc08a4284a01f840054d60ed, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Mat_Primer_Backbone_R
+    second: {fileID: 2100000, guid: 8e779815b9f2a406a9c346a261388ccb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Mat_Taq
+    second: {fileID: 2100000, guid: e3575f754f14749b98b03d9e4dc57711, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Mat_Taq_Broken
+    second: {fileID: 2100000, guid: 0fccf8130d4c34978abd90bbcfff95b6, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

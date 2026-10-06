@@ -1,9 +1,5 @@
-# WHITELIST: everything is ignored unless it is allowed below.
-
-# 1. Ignore everything at the repository root...
 /*
 
-# 2. ...except these.
 !/.gitignore
 !/README.md
 !/Assets/
@@ -12,11 +8,9 @@
 !/3D Designs/
 !/Tools/
 
-# 3. Tools: only the exporter script.
 /Tools/*
 !/Tools/export_helix_fbx.py
 
-# 4. Inside the allowed folders, keep out editor junk, logs, and any notes, docs or AI agent files.
 .DS_Store
 Thumbs.db
 *.log
@@ -25,10 +19,4 @@ Thumbs.db
 *~
 *.md
 !/README.md
-AGENTS*
-CLAUDE*
-GEMINI*
-*.cursorrules
-.cursor/
-.claude/
-.github/copilot-instructions.md
+.vscode/

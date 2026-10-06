@@ -4,7 +4,13 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/Scene1_Journey.unity
+    guid: 84dc198ad59cf43b1b9127913bb0972c
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+    com.unity.xr.arfoundation.simulation_settings: {fileID: 11400000, guid: 3a93e0dc6bf304ea2a7b5876ab65526c, type: 2}
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: bd57dcf981d7b4ae0b0c1c912ebe8d34, type: 2}
+    com.unity.xr.openxr.settings4: {fileID: 11400000, guid: b321590b4e2124df88c8ddd08cfe73eb, type: 2}
   m_UseUCBPForAssetBundles: 0
