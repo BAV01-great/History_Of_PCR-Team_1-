@@ -1,0 +1,106 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7aecfe02f098f4aa1a6906e9c417e0ba, type: 3}
+  m_Name: Scene1_Steps
+  m_EditorClassIdentifier: Assembly-CSharp::PCR.StepSequence
+  sequenceId: scene1
+  title: Journey Through Time
+  finishPrompt: 
+  steps:
+  - id: wear_coat
+    target: lab_coat
+    action: wear
+    dest: 
+    prompt: Put on the lab coat
+    say: 
+    hint: Put on the lab coat first. It hangs by the door.
+    gated: 0
+  - id: approach_dna
+    target: dna
+    action: approach
+    dest: 
+    prompt: Approach the DNA to begin your journey.
+    say: 
+    hint: 
+    gated: 0
+  - id: start_journey
+    target: start_button
+    action: press
+    dest: 
+    prompt: Press the glowing button
+    say: 
+    hint: 
+    gated: 0
+  - id: m1869
+    target: next_button
+    action: press
+    dest: 
+    prompt: Press NEXT
+    say: 
+    hint: Press the highlighted button to continue.
+    gated: 1
+  - id: m1953
+    target: next_button
+    action: press
+    dest: 
+    prompt: Press NEXT
+    say: 
+    hint: Press the highlighted button to continue.
+    gated: 1
+  - id: m1983
+    target: next_button
+    action: press
+    dest: 
+    prompt: Press NEXT
+    say: 
+    hint: Press the highlighted button to continue.
+    gated: 1
+  - id: m1985
+    target: next_button
+    action: press
+    dest: 
+    prompt: Press NEXT
+    say: 
+    hint: Press the highlighted button to continue.
+    gated: 1
+  - id: m1988
+    target: next_button
+    action: press
+    dest: 
+    prompt: Press NEXT
+    say: 
+    hint: Press the highlighted button to continue.
+    gated: 1
+  - id: m1993
+    target: next_button
+    action: press
+    dest: 
+    prompt: Press NEXT
+    say: 
+    hint: Press the highlighted button to continue.
+    gated: 1
+  - id: m1990s
+    target: next_button
+    action: press
+    dest: 
+    prompt: Press NEXT
+    say: 
+    hint: Press the highlighted button to continue.
+    gated: 1
+  - id: today
+    target: explore_button
+    action: press
+    dest: 
+    prompt: Press EXPLORE PCR TYPES
+    say: 
+    hint: Press the highlighted button to continue.
+    gated: 1
