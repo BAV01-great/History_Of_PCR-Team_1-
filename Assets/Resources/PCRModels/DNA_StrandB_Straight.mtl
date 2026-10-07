@@ -1,0 +1,42 @@
+newmtl Mat_Backbone_B
+Kd 0.78 0.82 0.88
+Ka 0 0 0
+Ks 0 0 0
+d 1
+illum 1
+
+newmtl Mat_Base_A
+Kd 1.0 0.25 0.25
+Ka 0 0 0
+Ks 0 0 0
+d 1
+illum 1
+
+newmtl Mat_Base_C
+Kd 0.25 0.9 0.4
+Ka 0 0 0
+Ks 0 0 0
+d 1
+illum 1
+
+newmtl Mat_Base_G
+Kd 1.0 0.85 0.2
+Ka 0 0 0
+Ks 0 0 0
+d 1
+illum 1
+
+newmtl Mat_Base_T
+Kd 0.25 0.45 1.0
+Ka 0 0 0
+Ks 0 0 0
+d 1
+illum 1
+
+newmtl Mat_Cap_5prime
+Kd 0.95 0.95 0.95
+Ka 0 0 0
+Ks 0 0 0
+d 1
+illum 1
+

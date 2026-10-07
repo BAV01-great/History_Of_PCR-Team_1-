@@ -4,13 +4,6 @@ using UnityEngine;
 
 namespace PCR
 {
-    /// <summary>
-    /// Sound design for Scene 1 (the final script's Sound Design section). One continuous music track built from layers that come in as the story
-    /// progresses: A pad (whole experience), B pulse (1983), C strings (1988), D sparkle (1990s, carried into Scene 2); thinned to the pad at the
-    /// Nobel moment. A glassy DNA hum follows the DNA and rises as the player nears. Music is ducked while the voice plays.
-    /// Everything is procedural so the scene is never silent; a file named like a cue in Resources/Sfx replaces the stand-in.
-    /// Palette is soft on purpose: no heavy bass or harsh sounds in a headset.
-    /// </summary>
     public class JourneyAudio : MonoBehaviour
     {
         const float LoopSeconds = 8f;
@@ -48,13 +41,12 @@ namespace PCR
             return a;
         }
 
-        // ------------------------------------------------------------------ music layers (8 s loops; frequencies are multiples of 1/8 Hz so they loop cleanly)
         static AudioClip MakeLayerA() => ProcAudio.Make("layerA", LoopSeconds, (t, u) =>
             (Sin(220f, t) * 0.5f + Sin(261.625f, t) * 0.35f + Sin(329.625f, t) * 0.3f + Sin(392f, t) * 0.22f + Sin(110f, t) * 0.25f) * (0.75f + 0.25f * Sin(0.125f, t)) * 0.35f);
 
         static AudioClip MakeLayerB() => ProcAudio.Make("layerB", LoopSeconds, (t, u) =>
         {
-            float ph = Mathf.Repeat(t * 2f, 1f);                 // a soft pulse every half second
+            float ph = Mathf.Repeat(t * 2f, 1f);
             return Sin(110f, t) * Mathf.Exp(-ph * 7f) * 0.5f;
         });
 
@@ -62,13 +54,12 @@ namespace PCR
         {
             float v = 0f;
             foreach (float f in new[] { 220f, 277.25f, 329.625f })
-                for (int h = 1; h <= 4; h++) v += Sin(f * h, t) / (h * h);   // warm, band-limited "strings"
+                for (int h = 1; h <= 4; h++) v += Sin(f * h, t) / (h * h);
             return v * 0.22f * (0.7f + 0.3f * Sin(0.25f, t));
         });
 
         static AudioClip MakeLayerD() => ProcAudio.Make("layerD", LoopSeconds, (t, u) =>
         {
-            // light plucks on a fixed pattern
             float[] notes = { 1318.5f, 1568f, 1975.5f, 1568f, 2093f, 1568f, 1318.5f, 1760f };
             int i = Mathf.FloorToInt(t / 0.5f) % notes.Length;
             float ph = Mathf.Repeat(t, 0.5f);
@@ -78,6 +69,7 @@ namespace PCR
         public void Begin()
         {
             layerTarget['A'] = 0.30f;
+            layerTarget['D'] = 0.14f;
             room.volume = 0.05f;
             StartCoroutine(Drips());
         }
@@ -87,44 +79,40 @@ namespace PCR
             while (true) { yield return new WaitForSeconds(Random.Range(6f, 13f)); if (LabLighting.Level < 0.5f) Cue("drip"); }
         }
 
-        /// <summary>Music layers by milestone: B from 1983, C from 1988, pad only at the Nobel, B+C+D from the 1990s.</summary>
         public void OnMilestone(int i)
         {
             layerTarget['B'] = i >= 2 && i != 5 ? 0.22f : 0f;
             layerTarget['C'] = i >= 4 && i != 5 ? 0.30f : 0f;
-            layerTarget['D'] = i >= 6 ? 0.22f : 0f;
+            layerTarget['D'] = i >= 6 ? 0.22f : (i == 5 ? 0.08f : 0.14f);
             layerTarget['A'] = i == 5 ? 0.20f : 0.30f;
         }
 
-        /// <summary>Scene 2 mix: all layers, warmest.</summary>
         public void OnSceneTwo() { layerTarget['A'] = 0.34f; layerTarget['B'] = 0.26f; layerTarget['C'] = 0.34f; layerTarget['D'] = 0.28f; }
 
-        // ------------------------------------------------------------------ DNA hum
         public void SetHum(Transform t, float near)
         {
             humTarget = t;
             if (t == null) { hum.volume = 0f; return; }
             hum.transform.position = t.position;
             hum.volume = Mathf.Lerp(0.04f, 0.30f, near);
-            hum.pitch = Mathf.Lerp(0.9f, 1.35f, near);   // rises in pitch and volume as the user nears
+            hum.pitch = Mathf.Lerp(0.9f, 1.35f, near);
         }
 
         void Update()
         {
             bool speaking = NarrationManager.Instance != null && NarrationManager.Instance.IsSpeaking;
-            duck = Mathf.MoveTowards(duck, speaking ? 0.4f : 1f, Time.deltaTime * 2.5f);   // about -8 dB under the voice
+            duck = Mathf.MoveTowards(duck, speaking ? 0.4f : 1f, Time.deltaTime * 2.5f);
             foreach (var kv in layers)
                 kv.Value.volume = Mathf.MoveTowards(kv.Value.volume, layerTarget[kv.Key] * duck, Time.deltaTime * 0.18f);
             if (humTarget != null) hum.transform.position = humTarget.position;
         }
 
-        // ------------------------------------------------------------------ cues
         public void Cue(string name, float volume = 0.7f)
         {
             var clip = Clip(name);
             if (clip == null) return;
             float pitch = 1f;
-            if (name == "next") { nextPitch += 0.04f; pitch = nextPitch; }   // NEXT: slightly higher each time
+            if (name == "next") { nextPitch += 0.04f; pitch = nextPitch; }
             sfx.pitch = pitch;
             sfx.PlayOneShot(clip, volume * Mathf.Lerp(1f, 0.6f, 1f - duck));
         }

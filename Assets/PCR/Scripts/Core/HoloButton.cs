@@ -5,16 +5,11 @@ using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
 namespace PCR
 {
-    /// <summary>
-    /// A chunky 3D button. Works with VR ray / select, the XR Interaction Simulator, and the desktop fallback (DesktopRig calls Press()).
-    /// Uses XRSimpleInteractable, so no UI raycaster/EventSystem setup is needed.
-    /// </summary>
     public class HoloButton : MonoBehaviour, IPressable
     {
         public event Action Pressed;
         public bool Interactable = true;
 
-        /// <summary>If set, pressing this button also raises that step target id (and the button is highlightable by the step system).</summary>
         public string StepId
         {
             get => stepId;
@@ -37,7 +32,6 @@ namespace PCR
             go.transform.SetParent(parent, false);
             go.transform.localPosition = localPos;
             go.transform.localScale = new Vector3(sizeMeters.x, sizeMeters.y, 0.04f);
-            // Generous collider so the ray finds it easily.
             var bc = go.GetComponent<BoxCollider>();
             bc.size = new Vector3(1.15f, 1.3f, 4f);
 
@@ -48,7 +42,6 @@ namespace PCR
             go.GetComponent<Renderer>().sharedMaterial = b.mat;
             b.baseScale = go.transform.localScale;
 
-            // Label canvas sits in front of the button face (towards the viewer, -z).
             var canvas = Ui.Canvas("Label", go.transform, new Vector2(sizeMeters.x * 1000f, sizeMeters.y * 1000f), new Vector3(0, 0, -0.52f));
             canvas.transform.localScale = new Vector3(1f / go.transform.localScale.x, 1f / go.transform.localScale.y, 1f / go.transform.localScale.z) * 0.001f;
             b.label = Ui.Label(canvas.transform, text, fontPx, Color.white, TextAnchor.MiddleCenter,

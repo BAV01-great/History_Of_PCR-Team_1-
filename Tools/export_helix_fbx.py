@@ -14,7 +14,6 @@ import math
 import random
 import sys
 
-# ---------------------------------------------------------------- geometry (Unity-space, mirrors MeshBuilder.cs)
 def sub(a, b): return (a[0] - b[0], a[1] - b[1], a[2] - b[2])
 def add(a, b): return (a[0] + b[0], a[1] + b[1], a[2] + b[2])
 def mul(a, k): return (a[0] * k, a[1] * k, a[2] * k)
@@ -28,7 +27,7 @@ def lerp(a, b, t): return add(mul(a, 1 - t), mul(b, t))
 class Mesh:
     """Triangles with an outward normal each, tagged with a material index."""
     def __init__(self):
-        self.tris = []  # (p0, p1, p2, outward, material)
+        self.tris = []
 
     def quad(self, a, b, c, d, outward, mat):
         self.tris.append((a, b, c, outward, mat))
@@ -53,15 +52,15 @@ class Mesh:
             cen = mul(add(add(t[0], t[1]), t[2]), 1 / 3)
             self.tris.append((t[0], t[1], t[2], sub(cen, c), mat))
 
-MATERIALS = [  # name, diffuse (sRGB-ish 0..1), emissive scale
+MATERIALS = [
     ("Mat_Backbone_A", (0.42, 0.46, 0.52)),
     ("Mat_Backbone_B", (0.80, 0.84, 0.90)),
-    ("Mat_Base_A", (1.00, 0.25, 0.25)),   # A red
-    ("Mat_Base_T", (0.25, 0.45, 1.00)),   # T blue
-    ("Mat_Base_G", (1.00, 0.85, 0.20)),   # G yellow
-    ("Mat_Base_C", (0.25, 0.90, 0.40)),   # C green
+    ("Mat_Base_A", (1.00, 0.25, 0.25)),
+    ("Mat_Base_T", (0.25, 0.45, 1.00)),
+    ("Mat_Base_G", (1.00, 0.85, 0.20)),
+    ("Mat_Base_C", (0.25, 0.90, 0.40)),
 ]
-BASE_MAT = [2, 3, 4, 5]  # A, T, G, C   (index ^ 1 is the complementary base)
+BASE_MAT = [2, 3, 4, 5]
 
 def build_helix(pairs, radius, rise, twist_deg, seed):
     m = Mesh(); rnd = random.Random(seed)
@@ -81,8 +80,7 @@ def build_helix(pairs, radius, rise, twist_deg, seed):
         m.prism(lerp(p2, p1, 0.08), mid, rr, 4, BASE_MAT[comp])
     return m
 
-# ---------------------------------------------------------------- FBX 7.4 ASCII writer
-def fbx_coords(p):  # Unity-space -> FBX-space (Unity's importer mirrors X)
+def fbx_coords(p):
     return (-p[0], p[1], p[2])
 
 def write_fbx(path, mesh, name="DNA_Helix_Neon"):
@@ -91,7 +89,7 @@ def write_fbx(path, mesh, name="DNA_Helix_Neon"):
         a, b, c = fbx_coords(p0), fbx_coords(p1), fbx_coords(p2)
         n_out = fbx_coords(outward)
         face_n = cross(sub(b, a), sub(c, a))
-        if dot(face_n, n_out) < 0:   # FBX front faces are counter-clockwise (right-handed)
+        if dot(face_n, n_out) < 0:
             b, c = c, b
             face_n = cross(sub(b, a), sub(c, a))
         n = norm(face_n)

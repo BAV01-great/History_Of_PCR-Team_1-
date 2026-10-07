@@ -1,16 +1,14 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace PCR
 {
-    /// <summary>
-    /// The lab has two moods on the same geometry: DIM (Scene 1: dark, blue-neutral, night outside, panels nearly off) and BRIGHT
-    /// (Scene 2: daylight, panels on). Apply(0..1) blends everything; Fade() animates it (the "lights power up" moment).
-    /// </summary>
     public static class LabLighting
     {
         public static Light Sun;
         public static Material Panel, Sky, Lawn, Tree;
+        public static readonly List<(Material m, Color dim, Color bright)> Tinted = new List<(Material, Color, Color)>();
 
         static readonly Color AmbDim = new Color(0.165f, 0.215f, 0.380f), AmbBright = new Color(0.72f, 0.75f, 0.80f);
         static readonly Color SunDimC = new Color(0.45f, 0.60f, 1f), SunBrightC = new Color(1f, 0.97f, 0.92f);
@@ -32,11 +30,12 @@ namespace PCR
             Set(Sky, Color.Lerp(SkyDim, SkyBright, t));
             Set(Lawn, Color.Lerp(LawnDim, LawnBright, t));
             Set(Tree, Color.Lerp(TreeDim, TreeBright, t));
+            foreach (var (m, dim, bright) in Tinted) Set(m, Color.Lerp(dim, bright, t));
             var cam = Camera.main;
             if (cam != null) cam.backgroundColor = Color.Lerp(Theme.DeepNavy, FogBright, t);
         }
 
-        static void Set(Material m, Color c) { if (m != null) m.SetColor("_BaseColor", c); }
+        static void Set(Material m, Color c) { if (m != null) { m.SetColor("_BaseColor", c); m.color = c; } }
 
         public static IEnumerator Fade(float from, float to, float seconds)
         {

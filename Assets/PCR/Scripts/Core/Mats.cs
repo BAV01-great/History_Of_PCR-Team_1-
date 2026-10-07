@@ -4,10 +4,6 @@ using UnityEngine.Rendering;
 
 namespace PCR
 {
-    /// <summary>
-    /// URP materials created in code. Few unique materials + SRP-batcher friendly = cheap on Quest.
-    /// PCR Tools > Setup adds these shaders to Always Included so builds don't strip them.
-    /// </summary>
     public static class Mats
     {
         static readonly Dictionary<string, Material> Cache = new Dictionary<string, Material>();
@@ -24,7 +20,6 @@ namespace PCR
         public static Shader UnlitShader => Find("Universal Render Pipeline/Unlit", "Unlit/Color");
         public static Shader ParticleShader => Find("Universal Render Pipeline/Particles/Unlit", "Sprites/Default");
 
-        /// <summary>Cached, shared opaque Lit material. Do not modify the result.</summary>
         public static Material Lit(Color color, Color? emission = null, float smoothness = 0.5f, float metallic = 0f)
         {
             string key = $"lit|{color}|{emission}|{smoothness}|{metallic}";
@@ -34,7 +29,6 @@ namespace PCR
             return m;
         }
 
-        /// <summary>Unique material instance (use when you animate its emission).</summary>
         public static Material LitNew(Color color, Color? emission = null, float smoothness = 0.5f, float metallic = 0f)
         {
             var m = new Material(LitShader);
@@ -52,7 +46,6 @@ namespace PCR
             return m;
         }
 
-        /// <summary>Lit material with a base map (and optional normal map) tiled across a surface, e.g. the concrete lab floor.</summary>
         public static Material LitTextured(Texture2D baseMap, Texture2D normalMap, Vector2 tiling, Color tint, float smoothness = 0.35f)
         {
             string key = $"tex|{(baseMap != null ? baseMap.GetInstanceID() : 0)}|{tiling}|{tint}|{smoothness}";
@@ -100,7 +93,6 @@ namespace PCR
             return m;
         }
 
-        /// <summary>Soft additive glow, for particles, halos, lines and holograms.</summary>
         public static Material Glow(Color tint)
         {
             string key = $"glow|{tint}";
@@ -115,7 +107,6 @@ namespace PCR
             return m;
         }
 
-        /// <summary>Additive material with no texture, for LineRenderers.</summary>
         public static Material Line(Color tint)
         {
             string key = $"line|{tint}";

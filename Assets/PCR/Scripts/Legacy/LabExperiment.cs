@@ -1,5 +1,3 @@
-// LEGACY (archived): belongs to the old five-scene plan. Compiled only if the scripting define PCR_LEGACY is set.
-// Kept for reuse of the station and bench code in later scenes.
 #if PCR_LEGACY
 using System.Collections;
 using UnityEngine;
@@ -7,14 +5,8 @@ using UnityEngine.UI;
 
 namespace PCR
 {
-    /// <summary>
-    /// The PCR reaction-setup bench (ids match Resources/Experiments/pcr_setup.json) and the hand animations for its actions:
-    /// pickup (grab), pour, aspirate / dispense (pipette grip + thumb on the plunger), place (pinch), close (lid) and press (point).
-    /// Items are built from the lab models where they exist, otherwise from primitives.
-    /// </summary>
     public class LabExperiment : MonoBehaviour
     {
-        // If the PCR.fbx thermocycler faces the wrong way in the editor, change this (degrees about Y).
         const float ThermocyclerYaw = 90f;
 
         Transform root;
@@ -37,7 +29,6 @@ namespace PCR
             hands = GloveHands.Instance;
             float y = a.BenchTopY, x = a.ExperimentX;
 
-            // --- pipette on a stand, with a tip box beside it
             var standM = Mats.Lit(Theme.NavyMid, null, 0.4f);
             Gen.Box("PipetteStandBase", root, new Vector3(x, y + 0.01f, -2.7f), new Vector3(0.16f, 0.02f, 0.16f), standM);
             Gen.Prim(PrimitiveType.Cylinder, "PipetteStandPost", root, new Vector3(x - 0.05f, y + 0.12f, -2.7f), new Vector3(0.012f, 0.11f, 0.012f), standM);
@@ -50,21 +41,18 @@ namespace PCR
             pipetteLiquid = Liquid(pipette.transform, new Color(0.3f, 0.8f, 1f), 0.004f, 0f, LabLocalBottom(pipette));
             LabInteractable.Make(pipette, "micropipette", "Micropipette");
 
-            // --- cold block with the master mix tube and the PCR tube
             Gen.Box("IceBlock", root, new Vector3(x, y + 0.02f, -1.2f), new Vector3(0.34f, 0.04f, 0.11f), Mats.Glass(new Color(0.55f, 0.8f, 1f, 0.7f)));
             mastermixTube = Tube(new Vector3(x - 0.1f, y + 0.04f, -1.2f), 0.0095f, 0.046f, new Color(0.95f, 0.8f, 0.2f), "mastermix_tube", "Master mix", out mixLiquid, 0.55f);
             pcrTube = Tube(new Vector3(x + 0.08f, y + 0.04f, -1.2f), 0.0065f, 0.034f, new Color(0.6f, 0.9f, 1f), "pcr_tube", "PCR tube", out pcrLiquid, 0f);
             tubeHome = pcrTube.transform.position;
-            Tube(new Vector3(x + 0.02f, y + 0.04f, -1.2f), 0.0065f, 0.034f, new Color(0.6f, 0.9f, 1f), null, null, out _, 0.3f);   // spare tubes (dressing)
+            Tube(new Vector3(x + 0.02f, y + 0.04f, -1.2f), 0.0065f, 0.034f, new Color(0.6f, 0.9f, 1f), null, null, out _, 0.3f);
             Tube(new Vector3(x + 0.14f, y + 0.04f, -1.2f), 0.0065f, 0.034f, new Color(0.6f, 0.9f, 1f), null, null, out _, 0.3f);
 
-            // --- water bottle
             waterHome = new Vector3(x, y, 0.9f);
             waterBottle = LabProps.Spawn("bottle_glassware_reagent_bottle_medium", root, waterHome, 0f, new Color(0.7f, 0.92f, 1.1f), 1f)
                           ?? Gen.Prim(PrimitiveType.Cylinder, "WaterBottle", root, waterHome + Vector3.up * 0.1f, new Vector3(0.07f, 0.1f, 0.07f), Mats.Glass(new Color(0.7f, 0.92f, 1f, 0.5f)));
             LabInteractable.Make(waterBottle, "water_bottle", "Nuclease-free water");
 
-            // --- thermocycler (team's PCR.fbx) with lid, block point and START button
             var tcPos = new Vector3(x, y, 2.3f);
             thermocycler = LabProps.Spawn("PCRModels/PCR", root, tcPos, ThermocyclerYaw, null, 1f, 0.62f);
             if (thermocycler == null)
@@ -87,14 +75,13 @@ namespace PCR
             }
             else Debug.LogWarning("[PCR] Thermocycler lid not found; step 'close_lid' will be skipped.");
 
-            // START button + status display on the player-facing (east) side
             ledMat = Mats.LitNew(new Color(0.1f, 0.4f, 0.15f), new Color(0.2f, 1f, 0.4f) * 1.2f, 0.3f);
             startButton = Gen.Box("StartButton", thermocycler.transform, Vector3.zero, new Vector3(0.05f, 0.035f, 0.07f), ledMat);
             startButton.transform.position = new Vector3(tb.max.x + 0.015f, tb.min.y + tb.size.y * 0.35f, tb.center.z);
             LabInteractable.Make(startButton, "thermocycler_start", "START");
             var canvas = Ui.Canvas("ThermoDisplay", thermocycler.transform, new Vector2(300, 120), Vector3.zero);
             canvas.transform.position = new Vector3(tb.max.x + 0.012f, tb.min.y + tb.size.y * 0.55f, tb.center.z);
-            canvas.transform.rotation = Quaternion.Euler(0, 90f, 0);   // face east, towards the player
+            canvas.transform.rotation = Quaternion.Euler(0, 90f, 0);
             Ui.Rect(canvas.transform, new Color(0.02f, 0.05f, 0.1f, 0.95f), new Vector2(300, 120), Vector2.zero);
             display = Ui.Label(canvas.transform, "READY", 38, new Color(0.3f, 1f, 0.55f), TextAnchor.MiddleCenter, new Vector2(290, 110), Vector2.zero, FontStyle.Bold);
         }
@@ -110,7 +97,6 @@ namespace PCR
             steps.Register("press", PressStart);
         }
 
-        // ------------------------------------------------------------------ builders
         GameObject Tube(Vector3 pos, float radius, float height, Color tint, string id, string label, out Transform liquid, float fill)
         {
             var g = new GameObject(id ?? "Tube");
@@ -123,7 +109,6 @@ namespace PCR
             return g;
         }
 
-        /// <summary>A liquid column: pivot at its bottom, scale.y = height in metres.</summary>
         static Transform Liquid(Transform parent, Color c, float radius, float height, Vector3 bottomLocal)
         {
             var pivot = new GameObject("Liquid").transform;
@@ -145,12 +130,10 @@ namespace PCR
             return null;
         }
 
-        // ------------------------------------------------------------------ lid
         Vector3 lidHinge; float lidAngle = 38f;
         void OpenLid(bool open, Bounds tb)
         {
             if (lid == null) return;
-            // hinge on the far (west) edge, axis along z; raise the front (east) edge by rotating about it
             lidHinge = new Vector3(tb.min.x, tb.max.y, tb.center.z);
             if (open)
             {
@@ -160,7 +143,6 @@ namespace PCR
             }
         }
 
-        // ------------------------------------------------------------------ actions
         bool FreeIsRight => hands == null || hands.Held(true) == null;
 
         IEnumerator PickUp(StepDef s, LabInteractable li)
@@ -178,7 +160,6 @@ namespace PCR
             hands.SetPose(true, HandPose.PipetteGrip);
         }
 
-        /// <summary>Move the pipette so its tip is at tipTarget (hand carries it).</summary>
         IEnumerator CarryTip(Vector3 tipTarget, float seconds)
         {
             var tip = new Vector3(LabUtil.BoundsOf(pipette).center.x, LabUtil.BoundsOf(pipette).min.y, LabUtil.BoundsOf(pipette).center.z);
@@ -192,10 +173,10 @@ namespace PCR
             var tubeTop = mastermixTube.transform.position + Vector3.up * 0.05f;
             hands.SetPose(true, HandPose.PipetteGrip);
             yield return CarryTip(tubeTop + Vector3.up * 0.04f, 0.6f);
-            yield return CarryTip(tubeTop - Vector3.up * 0.02f, 0.3f);     // dip
-            hands.SetThumbPress(true, 1f);                                     // plunger pressed first,
+            yield return CarryTip(tubeTop - Vector3.up * 0.02f, 0.3f);
+            hands.SetThumbPress(true, 1f);
             yield return new WaitForSeconds(0.15f);
-            for (float t = 0; t < 0.5f; t += Time.deltaTime) { hands.SetThumbPress(true, 1f - t / 0.5f); yield return null; }   // then released: liquid is drawn up
+            for (float t = 0; t < 0.5f; t += Time.deltaTime) { hands.SetThumbPress(true, 1f - t / 0.5f); yield return null; }
             hands.SetThumbPress(true, 0f);
             yield return Fill(pipetteLiquid, 0f, 0.012f, 0.5f);
             SetFill(mixLiquid, 0.03f);
@@ -211,7 +192,7 @@ namespace PCR
             var tubeTop = pcrTube.transform.position + Vector3.up * 0.04f;
             yield return CarryTip(tubeTop + Vector3.up * 0.05f, 0.6f);
             yield return CarryTip(tubeTop, 0.25f);
-            hands.SetThumbPress(true, 1f);                                     // press the plunger
+            hands.SetThumbPress(true, 1f);
             yield return Fill(pipetteLiquid, 0.012f, 0f, 0.6f);
             yield return Fill(pcrLiquid, 0f, 0.018f, 0.4f);
             Sfx.Press(tubeTop);
@@ -239,7 +220,6 @@ namespace PCR
             yield return new WaitForSeconds(0.2f);
             hands.Hold(right, waterBottle.transform, new Vector3(0, -0.04f, 0.03f), Vector3.zero);
             yield return hands.CarryTo(right, dest.transform.position + new Vector3(0.05f, 0.2f, 0), 0.7f);
-            // tilt the bottle over the tube and let a stream run
             var stream = Gen.Prim(PrimitiveType.Cylinder, "Stream", null, dest.transform.position + Vector3.up * 0.1f, new Vector3(0.004f, 0.09f, 0.004f), Mats.Glow(new Color(0.5f, 0.85f, 1f, 0.9f)));
             stream.transform.localScale = new Vector3(0.006f, 0.09f, 0.006f);
             stream.SetActive(false);
@@ -307,12 +287,11 @@ namespace PCR
                 hands.SetPose(right, HandPose.Point);
                 yield return hands.ReachTo(right, LabUtil.Approach(startButton, 0.13f), 0.55f);
                 var home = startButton.transform.position;
-                yield return LabUtil.Move(startButton.transform, home + Vector3.left * 0.012f, 0.12f);   // pushed in (the display faces east)
+                yield return LabUtil.Move(startButton.transform, home + Vector3.left * 0.012f, 0.12f);
                 Sfx.Press(home);
                 yield return LabUtil.Move(startButton.transform, home, 0.12f);
                 yield return hands.ReturnToRest(right, 0.5f);
             }
-            // the run: a compressed thermal cycle on the display
             string[] phase = { "DENATURE", "ANNEAL", "EXTEND" };
             int[] temp = { 95, 58, 72 };
             for (int cycle = 1; cycle <= 5; cycle++)

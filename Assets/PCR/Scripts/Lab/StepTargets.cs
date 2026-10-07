@@ -4,10 +4,6 @@ using UnityEngine;
 
 namespace PCR
 {
-    /// <summary>
-    /// Registry of things a step can point at: lab objects (LabInteractable) and UI buttons (HoloButton with a StepId).
-    /// The step system highlights the registered GameObject and listens for Raise(id) when the player presses it.
-    /// </summary>
     public static class StepTargets
     {
         static readonly Dictionary<string, GameObject> Map = new Dictionary<string, GameObject>();

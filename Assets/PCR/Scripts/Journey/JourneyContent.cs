@@ -1,15 +1,11 @@
 namespace PCR
 {
-    /// <summary>
-    /// Scene 1 content from the final script (panel text from section 6, spoken lines from the Sound Design section).
-    /// Voice-over files go in Assets/Resources/Voiceover/ named by the ids below.
-    /// </summary>
     public static class JourneyContent
     {
         public class Milestone
         {
             public string StepId, Year, Title, Body;
-            public string[] Say;   // narration ids, played in order
+            public string[] Say;
         }
 
         public static readonly string[] Years = { "1869", "1953", "1983", "1985", "1988", "1993", "1990s", "TODAY" };
@@ -24,7 +20,7 @@ namespace PCR
                 Say = new[] { "m1953" } },
             new Milestone { StepId = "m1983", Year = "1983", Title = "THE BIRTH OF PCR",
                 Body = "Kary Mullis conceived the basic idea of the polymerase chain reaction, a method for selectively amplifying a specific DNA sequence.\n\nThe story shifts from understanding DNA to deliberately making many copies of it.",
-                Say = new[] { "m1983_a", "m1983_b" } },
+                Say = new[] { "m1983_a", "m1983_b1", "m1983_b2", "m1983_b3", "m1983_b4", "m1983_b5" } },
             new Milestone { StepId = "m1985", Year = "1985", Title = "PCR IS PUBLISHED",
                 Body = "PCR was publicly demonstrated through published scientific work.\n\nA landmark Science paper reported enzymatic amplification of beta-globin genomic sequences, relevant to sickle-cell anemia.\n\nScience, 1985",
                 Say = new[] { "m1985_a", "m1985_b" } },
@@ -45,18 +41,23 @@ namespace PCR
         public static void RegisterNarration()
         {
             var L = PcrText.Lines;
-            L["s1_start"] = "Every story begins with a single molecule.";
+            L["s1_welcome"] = "Welcome to the world of unlimited possibilities. Move towards the helix structure to begin your journey.";
+            L["s1_start"] = "Inside every sample is an enormous amount of genetic information, but sometimes, we don't need all of it. We need just one specific region. This birthed a problem: how do you find one small region and make enough copies of it to study? Scientists needed a way to selectively amplify that specific piece of DNA. That need is what led to PCR. Move towards the glowing structure to begin.";
             L["m1869"] = "In 1869, Friedrich Miescher isolated a new substance from cells and called it nuclein. We now know it as DNA. But what did it actually look like?";
-            L["m1953"] = "In 1953, its double-helix structure was described, a model for how genetic information could be stored and copied. So could we copy it on purpose?";
-            L["m1983_a"] = "In 1983, Kary Mullis conceived the polymerase chain reaction: a way to selectively amplify one chosen DNA sequence.";
-            L["m1983_b"] = "Separate the strands. Bind the primers. Build new DNA. Repeat.";
-            L["m1985_a"] = "In 1985, PCR moved from an idea into published science, amplifying specific DNA sequences for genetic analysis.";
-            L["m1985_b"] = "But there was a catch: the heat that split the DNA kept destroying the enzyme.";
+            L["m1953"] = "In 1953, the DNA's double-helix structure was described, a model for how genetic information could be stored and copied was established. So could we copy it on purpose?";
+            L["m1983_a"] = "In 1983, Kary Mullis developed the concept behind PCR: repeatedly copying a specific DNA sequence through cycles of heating, primer binding, and DNA synthesis. The idea offered a way to turn a tiny amount of DNA into many copies.";
+            L["m1983_b1"] = "Now, let's try it.";
+            L["m1983_b2"] = "Heat the DNA, and the two strands pull apart.";
+            L["m1983_b3"] = "Cool it, and the primers find their place.";
+            L["m1983_b4"] = "Warm it once more, and the polymerase builds new DNA.";
+            L["m1983_b5"] = "One molecule becomes two. Then it all begins again.";
+            L["m1985_a"] = "By 1985, the PCR method had been demonstrated experimentally and its amplification of specific DNA sequences was published. This helped move PCR from an idea into a practical laboratory technique.";
+            L["m1985_b"] = "But there was a limitation: the heat used to separate DNA also destroyed the DNA polymerase enzyme after each cycle.";
             L["m1988"] = "In 1988, a heat-tolerant enzyme, Taq polymerase, solved the problem. It survived repeated heating, so PCR could be automated and used routinely.";
             L["m1993"] = "PCR was now changing biology. And in 1993, Kary Mullis was awarded half of the Nobel Prize in Chemistry for inventing it.";
-            L["m1990s"] = "The story didn't stop there. In the 1990s, scientists learned to watch PCR as it happened, using fluorescence. Real-time PCR had arrived.";
-            L["today"] = "Today, PCR is a family of methods, each built for a different question. Let's meet them.";
-            L["to_scene2"] = "Now, let's see how PCR is used today.";
+            L["m1990s"] = "The story didn't stop there. In the 1990s, scientists learned to watch PCR in real time using fluorescence. Real-time PCR had arrived.";
+            L["today"] = "Today, PCR is no longer limited to simply making more copies of DNA. It has become a family of related techniques used across molecular biology and medicine, from genetic testing and infectious disease research to cancer diagnosis, cancer research, forensic analysis, and genomic studies. As scientists began asking different questions, they needed PCR approaches that could do more than simply amplify DNA, for example, detecting RNA, measuring how much DNA is present, or increasing the specificity of amplification. This led to the development of different types of PCR, each adapted for a particular purpose.";
+            L["to_scene2"] = "So, let's go back and explore the major types of PCR and what makes each one different.";
         }
     }
 }

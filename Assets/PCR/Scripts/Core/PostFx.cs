@@ -4,10 +4,6 @@ using UnityEngine.Rendering.Universal;
 
 namespace PCR
 {
-    /// <summary>
-    /// Bloom/vignette/tonemapping for PC and PC-VR. Skipped on standalone Quest (Android), where full-screen
-    /// post-processing is too expensive; the scenes rely on emissive materials + additive glow sprites there instead.
-    /// </summary>
     public static class PostFx
     {
         public static bool Enabled => Application.platform != RuntimePlatform.Android;
@@ -30,13 +26,12 @@ namespace PCR
             var tone = p.Add<Tonemapping>(true);
             tone.mode.Override(TonemappingMode.ACES);
 
-            // Punchy, saturated grade for the vibrant look
             var grade = p.Add<ColorAdjustments>(true);
             grade.saturation.Override(28f);
             grade.contrast.Override(10f);
 
             var vig = p.Add<Vignette>(true);
-            vig.color.Override(Theme.DeepNavy);   // navy vignette: the theme at the edges of every scene
+            vig.color.Override(Theme.DeepNavy);
             vig.intensity.Override(0.26f);
             vig.smoothness.Override(0.6f);
 

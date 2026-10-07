@@ -5,7 +5,6 @@ using UnityEngine.SceneManagement;
 
 namespace PCR
 {
-    /// <summary>Comfort fade (a quad just in front of the camera) and scene handoff.</summary>
     public class ScreenFader : MonoBehaviour
     {
         static ScreenFader instance;
@@ -60,7 +59,6 @@ namespace PCR
 
         public void SetAlpha(float a) { alpha = a; Apply(); }
 
-        /// <summary>Colour of the fade: navy by default, white for the DNA flash.</summary>
         public void SetTint(Color c) { tint = c; Apply(); }
 
         public IEnumerator FadeTo(float target, float seconds)
@@ -80,10 +78,6 @@ namespace PCR
 
     public static class SceneFlow
     {
-        /// <summary>
-        /// Fades out then loads the next scene (Team 2 handoff). If the scene isn't in Build Settings yet it
-        /// logs a warning and fades back in so the demo never dead-ends.
-        /// </summary>
         public static void LoadNext(MonoBehaviour host, string sceneName, Action onMissing = null)
         {
             host.StartCoroutine(Go(sceneName, onMissing));

@@ -1,5 +1,3 @@
-// LEGACY (archived): belongs to the old five-scene plan. Compiled only if the scripting define PCR_LEGACY is set.
-// Kept for reuse of the station and bench code in later scenes.
 #if PCR_LEGACY
 using System;
 using System.Collections;
@@ -9,11 +7,6 @@ using UnityEngine.UI;
 
 namespace PCR
 {
-    /// <summary>
-    /// One PCR-type station: lab bench + thermocycler, a title card, a START button, a ~14 s animated hologram
-    /// explaining the method, then a one-question knowledge check.
-    /// Local space: +z is away from the player, so the front of the bench (where the player stands) is -z.
-    /// </summary>
     public class PcrStation : MonoBehaviour
     {
         public enum Kind { EndPoint, QPcr, RtPcr, Nested }
@@ -24,7 +17,6 @@ namespace PCR
         public Action<PcrStation> Completed;
         public bool IsComplete { get; private set; }
 
-        // If the PCR.fbx thermocycler faces away from the player in the editor, change this (degrees).
         const float PcrModelYaw = 180f;
 
         static readonly string[] Titles = { "END-POINT PCR", "qPCR", "RT-PCR", "NESTED PCR" };
@@ -65,7 +57,6 @@ namespace PCR
             var steel = Mats.Lit(new Color(0.72f, 0.75f, 0.8f), null, 0.8f, 0.8f);
             Gen.Box("BenchTop", transform, new Vector3(0, 0.9f, 0), new Vector3(1.8f, 0.06f, 0.9f), top, true);
             Gen.Box("BenchBody", transform, new Vector3(0, 0.44f, 0.02f), new Vector3(1.7f, 0.88f, 0.8f), body, true);
-            // Thermocycler: the team's PCR.fbx when present (Assets/Resources/PCRModels/PCR), otherwise a generated box machine
             float yaw = transform.eulerAngles.y;
             ledMat = Mats.LitNew(Accent * 0.4f, Accent * 2f, 0.3f);
             var pcr = LabProps.Spawn("PCRModels/PCR", transform, transform.TransformPoint(new Vector3(0, 0.93f, 0.05f)), yaw + PcrModelYaw, null, 1f, 0.62f);
@@ -75,7 +66,6 @@ namespace PCR
                 Gen.Box("CyclerLid", transform, new Vector3(0, 1.11f, 0.07f), new Vector3(0.6f, 0.05f, 0.4f), body);
                 Gen.Box("CyclerLED", transform, new Vector3(0, 1.0f, -0.165f), new Vector3(0.4f, 0.025f, 0.01f), ledMat);
             }
-            // Tube rack
             var tubeMat = Mats.Glass(new Color(0.8f, 0.95f, 1f, 0.35f));
             var liquid = Mats.Lit(Accent * 0.5f, Accent * 0.9f, 0.5f);
             for (int i = 0; i < 4; i++)
@@ -84,27 +74,23 @@ namespace PCR
                 Gen.Prim(PrimitiveType.Cylinder, "Tube", transform, new Vector3(x, 0.99f, -0.1f), new Vector3(0.04f, 0.06f, 0.04f), tubeMat);
                 Gen.Prim(PrimitiveType.Cylinder, "Liquid", transform, new Vector3(x, 0.96f, -0.1f), new Vector3(0.028f, 0.025f, 0.028f), liquid);
             }
-            // Real lab equipment on the bench (CC0 Lab Assets), tinted with the station colour
             LabProps.Spawn("machine_centrifuge", transform, transform.TransformPoint(new Vector3(-0.62f, 0.93f, 0.05f)), yaw + 180f, Color.white * 1.1f, 0.9f);
             LabProps.Spawn("bottle_micropipet", transform, transform.TransformPoint(new Vector3(0.28f, 0.93f, -0.3f)), yaw, Accent * 1.4f, 1.7f);
             LabProps.Spawn("bottle_glassware_erlenmeyer_flask_small", transform, transform.TransformPoint(new Vector3(-0.3f, 0.93f, -0.28f)), yaw, Accent);
             LabProps.Spawn("bottle_glassware_vial_medium", transform, transform.TransformPoint(new Vector3(0.0f, 0.93f, -0.3f)), yaw, new Color(1f, 0.9f, 0.3f));
 
-            // Hologram stage (hidden until the station is started)
             vis = new GameObject("Hologram").transform;
             vis.SetParent(transform, false);
             vis.localPosition = new Vector3(0, 2.35f, 0);
             vis.gameObject.SetActive(false);
         }
 
-        // Demo autoplay hooks
         public Vector3 FrontPoint => transform.position - transform.forward * 2.3f;
         public bool CanStart => startBtn != null && !running;
         public bool QuizReady => quiz != null && !IsComplete && options.Count > 0;
         public void DemoStart() { if (startBtn != null) startBtn.Press(); }
         public void DemoAnswer() { if (QuizReady) options[PcrText.PcrTypeQuizzes[(int)Type].Correct].Press(); }
 
-        /// <summary>Card + START button pop in (the "cards appear one after another" beat).</summary>
         public void Appear()
         {
             Sfx.Appear(transform.position + Vector3.up * 2f);
@@ -134,12 +120,10 @@ namespace PCR
             if (narrationDone && visDone) ShowQuiz();
         }
 
-        // ------------------------------------------------------------------ stage helpers
         Canvas stageCanvas;
 
         void BuildStage()
         {
-            // Dark glass backing + caption line
             var back = Gen.Prim(PrimitiveType.Quad, "Backing", vis, new Vector3(0, 0, 0.02f), new Vector3(1.6f, 0.95f, 1f),
                 Mats.UnlitColor(new Color(0.01f, 0.05f, 0.09f, 0.78f), true));
             Gen.Box("FrameTop", vis, new Vector3(0, 0.475f, 0.0f), new Vector3(1.6f, 0.012f, 0.012f), Mats.Lit(Accent * 0.4f, Accent * 1.6f));
@@ -178,7 +162,6 @@ namespace PCR
             TryQuiz();
         }
 
-        // ------------------------------------------------------------------ 1. End-point
         IEnumerator VisEndPoint()
         {
             Cap("The reaction runs through its cycles...");
@@ -192,7 +175,7 @@ namespace PCR
                 counter.text = $"CYCLE {c} / 30";
                 float wFill = Mathf.Max(0.0001f, 1.1f * u);
                 fill.localScale = new Vector3(wFill, 0.07f, 0.01f);
-                fill.localPosition = new Vector3(wFill * 0.5f, 0, 0); // grow from the left edge of the frame
+                fill.localPosition = new Vector3(wFill * 0.5f, 0, 0);
                 Led(0.5f + 0.5f * Mathf.Sin(Time.time * 8f));
             });
             Led(0f);
@@ -200,7 +183,6 @@ namespace PCR
             yield return new WaitForSeconds(1.6f);
             frame.gameObject.SetActive(false); pivot.gameObject.SetActive(false);
 
-            // Gel with three lanes: ladder, sample, negative control
             var gel = new GameObject("Gel").transform; gel.SetParent(vis, false); gel.localPosition = new Vector3(0, 0.02f, -0.015f);
             Gen.Box("GelBody", gel, Vector3.zero, new Vector3(0.9f, 0.5f, 0.01f), Mats.Lit(new Color(0.05f, 0.08f, 0.1f), null, 0.2f));
             float[] ladderY = { -0.18f, -0.08f, 0.0f, 0.09f, 0.18f };
@@ -218,7 +200,6 @@ namespace PCR
             yield return new WaitForSeconds(2.2f);
         }
 
-        // ------------------------------------------------------------------ 2. qPCR
         IEnumerator VisQPcr()
         {
             Cap("Fluorescence is measured after every cycle, in real time.");
@@ -229,7 +210,6 @@ namespace PCR
             Txt("FLUORESCENCE", 20, Color.white, new Vector2(-640, 40), TextAnchor.MiddleCenter, 300).transform.localRotation = Quaternion.Euler(0, 0, 90);
             Txt("CYCLE", 22, Color.white, new Vector2(0, -330), TextAnchor.MiddleCenter, 300);
 
-            // threshold line
             float thrY = y0 + h * 0.32f;
             Bar("Threshold", new Color(1f, 0.85f, 0.25f), new Vector3(0, thrY, -0.012f), new Vector3(w, 0.004f, 0.004f), 1.4f);
             Txt("threshold", 20, new Color(1f, 0.85f, 0.25f), new Vector2(480, (thrY * 1000f) + 24), TextAnchor.MiddleCenter, 220);
@@ -255,7 +235,6 @@ namespace PCR
                 Led(0.5f + 0.5f * Mathf.Sin(Time.time * 8f));
             });
             Led(0f);
-            // Ct marker where curve crosses threshold
             int ct = 0; while (ct < n - 1 && pts[ct].y < thrY) ct++;
             Bar("CtLine", new Color(1f, 0.85f, 0.25f), new Vector3(pts[ct].x, (thrY + y0) * 0.5f, -0.012f), new Vector3(0.004f, thrY - y0, 0.004f), 1.4f);
             Txt("Ct", 30, new Color(1f, 0.85f, 0.25f), new Vector2(pts[ct].x * 1000f, -250), TextAnchor.MiddleCenter, 140);
@@ -265,7 +244,6 @@ namespace PCR
             yield return new WaitForSeconds(3.2f);
         }
 
-        /// <summary>A small DNA molecule for the RT-PCR demo: the team's DNA_Ladder_Whole model if present, else a generated helix.</summary>
         DnaHelix MiniHelix(string name, Vector3 pos)
         {
             var model = Resources.Load<GameObject>("PCRModels/DNA_Ladder_Whole");
@@ -273,7 +251,6 @@ namespace PCR
             return DnaHelix.Create(vis, name, pos, 12, 0.07f, 0.04f, 36f, 3, 1.2f);
         }
 
-        // ------------------------------------------------------------------ 3. RT-PCR
         IEnumerator VisRtPcr()
         {
             Cap("It starts with RNA.");
@@ -324,7 +301,6 @@ namespace PCR
             yield return new WaitForSeconds(2.2f);
         }
 
-        // ------------------------------------------------------------------ 4. Nested
         IEnumerator VisNested()
         {
             var grey = new Color(0.7f, 0.75f, 0.8f);
@@ -370,7 +346,6 @@ namespace PCR
             yield return new WaitForSeconds(2.6f);
         }
 
-        // ------------------------------------------------------------------ quiz
         void ShowQuiz()
         {
             var q = PcrText.PcrTypeQuizzes[(int)Type];

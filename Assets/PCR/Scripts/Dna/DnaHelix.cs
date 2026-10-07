@@ -4,22 +4,15 @@ using UnityEngine.Rendering;
 
 namespace PCR
 {
-    /// <summary>
-    /// Procedural, VR-optimised DNA double helix: 2 backbones + 4 base colours = 6 draw calls and ~1-3k triangles
-    /// for a hero helix, regardless of length. No textures, no downloaded assets.
-    /// </summary>
     public class DnaHelix : MonoBehaviour
     {
-        // Team colour key (History_of_PCR_3D_Asset_Handoff): A red, T blue, C green, G yellow.
-        // Index order here is A, T, G, C so that index ^ 1 is always the complementary base (A-T, G-C).
         public static readonly Color[] BaseColors =
         {
-            new Color(1.00f, 0.25f, 0.25f), // A red
-            new Color(0.25f, 0.45f, 1.00f), // T blue
-            new Color(1.00f, 0.85f, 0.20f), // G yellow
-            new Color(0.25f, 0.90f, 0.40f), // C green
+            new Color(1.00f, 0.25f, 0.25f),
+            new Color(0.25f, 0.45f, 1.00f),
+            new Color(1.00f, 0.85f, 0.20f),
+            new Color(0.25f, 0.90f, 0.40f),
         };
-        // Strand A dark grey, strand B light grey: they read against the dark navy scene and keep the base colours bold
         static readonly Color Backbone1 = new Color(0.42f, 0.46f, 0.52f);
         static readonly Color Backbone2 = new Color(0.80f, 0.84f, 0.90f);
 
@@ -42,11 +35,6 @@ namespace PCR
             return h;
         }
 
-        /// <summary>
-        /// Wraps one of the team's Blender models (DNA_Helix_Whole, DNA_Ladder_Whole, ...) so it gets the same spin and glow control
-        /// as the procedural helix. The model is scaled so it is targetHeight metres tall (its import scale is not assumed) and its
-        /// bottom centre is placed at the origin. Materials are rebuilt as URP Lit with the model's colours.
-        /// </summary>
         public static DnaHelix WrapModel(Transform parent, string name, Vector3 localPos, GameObject prefab, float targetHeight)
         {
             var go = new GameObject(name);
@@ -64,7 +52,6 @@ namespace PCR
             for (int i = 1; i < rs.Length; i++) b.Encapsulate(rs[i].bounds);
             float k = b.size.y > 1e-4f ? targetHeight / b.size.y : 1f;
             model.transform.localScale = Vector3.one * k;
-            // bottom centre of the scaled model onto the wrapper's origin
             var nb = rs.Length > 0 ? rs[0].bounds : new Bounds();
             for (int i = 1; i < rs.Length; i++) nb.Encapsulate(rs[i].bounds);
             model.transform.position += go.transform.position - new Vector3(nb.center.x, nb.min.y, nb.center.z);
@@ -109,7 +96,7 @@ namespace PCR
             float bb = radius * 0.16f;
             float rr = radius * 0.075f;
             var rnd = new System.Random(seed);
-            int sub = pairs > 30 ? 2 : 4;                        // tube rings per base pair (smooth curve)
+            int sub = pairs > 30 ? 2 : 4;
             int sides = pairs > 30 ? 6 : 8;
             var path1 = new List<Vector3>(); var path2 = new List<Vector3>();
 
@@ -131,7 +118,7 @@ namespace PCR
                     }
 
                 int b = rnd.Next(4);
-                int comp = b ^ 1; // A<->T, G<->C
+                int comp = b ^ 1;
                 var inner1 = Vector3.Lerp(p1, p2, 0.08f);
                 var inner2 = Vector3.Lerp(p2, p1, 0.08f);
                 var mid = (p1 + p2) * 0.5f;
@@ -144,7 +131,7 @@ namespace PCR
             AddPart("Backbone B", b2.ToMesh("backbone2"), Backbone2, emission * 0.35f);
             for (int i = 0; i < 4; i++)
             {
-                if (rungs[i].VertexCount > 0) AddPart("Base " + "ATGC"[i], rungs[i].ToMesh("base" + i), BaseColors[i], emission * 0.5f);   // low glow keeps the four colours saturated
+                if (rungs[i].VertexCount > 0) AddPart("Base " + "ATGC"[i], rungs[i].ToMesh("base" + i), BaseColors[i], emission * 0.5f);
             }
         }
 
@@ -162,7 +149,6 @@ namespace PCR
             baseEmission.Add(color * emission);
         }
 
-        /// <summary>1 = default brightness. Used for proximity glow / pulses.</summary>
         public void SetGlow(float g)
         {
             glow = g;

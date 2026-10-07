@@ -3,16 +3,16 @@ using UnityEngine.UI;
 
 namespace PCR
 {
-    /// <summary>World-space UI helpers. Display-only canvases: interaction is done by 3D HoloButtons, which work with ray, poke and desktop.</summary>
     public static class Ui
     {
         static Font font;
-        public static Font Font => font != null ? font : (font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"));
+        static Font bold;
+        public static Font Font => font != null ? font : (font = Resources.Load<Font>("Fonts/Play-Regular") ?? Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"));
+        public static Font BoldFont => bold != null ? bold : (bold = Resources.Load<Font>("Fonts/Play-Bold") ?? Font);
 
         public static readonly Color Cyan = new Color(0.25f, 0.9f, 1f);
         public static readonly Color Panel = Theme.PanelBg;
 
-        /// <summary>World-space canvas. size is in canvas pixels; 1000 px = 1 metre.</summary>
         public static Canvas Canvas(string name, Transform parent, Vector2 size, Vector3 localPos)
         {
             var go = new GameObject(name, typeof(RectTransform));
@@ -35,10 +35,11 @@ namespace PCR
             rt.sizeDelta = boxSize;
             rt.anchoredPosition = anchoredPos;
             var t = go.AddComponent<Text>();
-            t.font = Font;
+            bool isBold = style == FontStyle.Bold || style == FontStyle.BoldAndItalic;
+            t.font = isBold ? BoldFont : Font;
             t.text = text;
             t.fontSize = size;
-            t.fontStyle = style;
+            t.fontStyle = isBold && BoldFont != Font ? (style == FontStyle.BoldAndItalic ? FontStyle.Italic : FontStyle.Normal) : style;
             t.color = color;
             t.alignment = anchor;
             t.horizontalOverflow = HorizontalWrapMode.Wrap;
@@ -67,7 +68,6 @@ namespace PCR
         }
     }
 
-    /// <summary>Floating info panel: dark glass card with an accent bar. Pops in when created.</summary>
     public class HoloPanel : MonoBehaviour
     {
         public Text Title, Body;
@@ -106,13 +106,11 @@ namespace PCR
             transform.localScale = targetScale * 0.001f * e;
         }
 
-        /// <summary>Replay the pop-in (used when a panel's content changes).</summary>
         public void Pop() { t = 0f; transform.localScale = Vector3.zero; }
 
         public void Dismiss() => Destroy(gameObject);
     }
 
-    /// <summary>Keeps a HUD root comfortably in front of the head. Smoothed, so it never feels glued to your face in VR.</summary>
     public class FollowHead : MonoBehaviour
     {
         public float Distance = 1.7f;

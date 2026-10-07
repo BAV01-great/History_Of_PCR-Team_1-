@@ -6,12 +6,6 @@ namespace PCR
 {
     public enum HandPose { Relaxed, Open, Point, Pinch, Grab, PipetteGrip }
 
-    /// <summary>
-    /// Labster-style first-person hands: low-poly, procedurally built, skin first and blue nitrile gloves once the player has put them on
-    /// (white coat sleeves after the lab coat). Fingers curl through poses (grab, pinch, point/press, pipette grip) and a hand can reach to a
-    /// world position, hold an item, and return to rest. Desktop: attached to the camera. XR: attached to the controllers (no reach animation,
-    /// since the player's real hands do the reaching).
-    /// </summary>
     public class GloveHands : MonoBehaviour
     {
         public static GloveHands Instance { get; private set; }
@@ -20,40 +14,38 @@ namespace PCR
         {
             public bool Right;
             public Transform Root, HoldPoint, ThumbBase;
-            public Transform[][] Fingers = new Transform[5][];   // 0 thumb, 1 index, 2 middle, 3 ring, 4 pinky
+            public Transform[][] Fingers = new Transform[5][];
             public readonly float[] Curl = new float[5];
             public readonly float[] Target = new float[5];
             public readonly Quaternion[][] BoneRest = new Quaternion[5][];
             public readonly Vector3[] CurlAxis = { Vector3.right, Vector3.right, Vector3.right, Vector3.right, Vector3.right };
-            public float ThumbPress;                              // extra thumb curl for pipette plunger
+            public float ThumbPress;
             public Vector3 RestPos; public Quaternion RestRot;
             public bool Busy;
             public Transform Held;
             public GameObject Sleeve, GloveCuff;
         }
 
-        // curls (thumb, index, middle, ring, pinky), 0 = straight, 1 = fully curled. Fingers differ on purpose: real hands never curl evenly.
         static readonly float[][] Poses =
         {
-            new[] { 0.28f, 0.16f, 0.26f, 0.37f, 0.48f },   // Relaxed
-            new[] { 0.02f, 0.02f, 0.00f, 0.04f, 0.06f },   // Open
-            new[] { 0.45f, 0.02f, 0.88f, 0.94f, 0.97f },   // Point (button press)
-            new[] { 0.55f, 0.52f, 0.30f, 0.26f, 0.30f },   // Pinch (small tube)
-            new[] { 0.62f, 0.70f, 0.78f, 0.82f, 0.86f },   // Grab
-            new[] { 0.30f, 0.60f, 0.72f, 0.78f, 0.84f },   // PipetteGrip
+            new[] { 0.28f, 0.16f, 0.26f, 0.37f, 0.48f },
+            new[] { 0.02f, 0.02f, 0.00f, 0.04f, 0.06f },
+            new[] { 0.45f, 0.02f, 0.88f, 0.94f, 0.97f },
+            new[] { 0.55f, 0.52f, 0.30f, 0.26f, 0.30f },
+            new[] { 0.62f, 0.70f, 0.78f, 0.82f, 0.86f },
+            new[] { 0.30f, 0.60f, 0.72f, 0.78f, 0.84f },
         };
-        // segment lengths in metres (proximal, middle, distal): adult hand proportions
         static readonly float[][] SegLen =
         {
-            new[] { 0.036f, 0.027f, 0.000f },   // thumb
-            new[] { 0.040f, 0.024f, 0.020f },   // index
-            new[] { 0.044f, 0.027f, 0.021f },   // middle
-            new[] { 0.041f, 0.025f, 0.020f },   // ring
-            new[] { 0.033f, 0.019f, 0.017f },   // pinky
+            new[] { 0.036f, 0.027f, 0.000f },
+            new[] { 0.040f, 0.024f, 0.020f },
+            new[] { 0.044f, 0.027f, 0.021f },
+            new[] { 0.041f, 0.025f, 0.020f },
+            new[] { 0.033f, 0.019f, 0.017f },
         };
-        static readonly float[] FingerX = { -0.031f, -0.0105f, 0.010f, 0.0285f };   // index..pinky across the knuckles (right hand)
-        static readonly float[] FingerZ = { 0.100f, 0.103f, 0.100f, 0.092f };       // the knuckle line is a gentle arc
-        static readonly float[] FingerSplay = { -3f, 0f, 3f, 7f };                  // degrees of fan-out
+        static readonly float[] FingerX = { -0.031f, -0.0105f, 0.010f, 0.0285f };
+        static readonly float[] FingerZ = { 0.100f, 0.103f, 0.100f, 0.092f };
+        static readonly float[] FingerSplay = { -3f, 0f, 3f, 7f };
         static readonly float[] MaxAngle = { 80f, 95f, 65f };
 
         Hand left, right;
@@ -70,7 +62,7 @@ namespace PCR
         {
             Instance = this;
             skin = Mats.LitNew(new Color(0.80f, 0.60f, 0.49f), null, 0.30f);
-            glove = Mats.LitNew(new Color(0.18f, 0.58f, 1.0f), new Color(0.02f, 0.07f, 0.16f), 0.38f);   // matte nitrile, faintly lifted so it reads in a dim room
+            glove = Mats.LitNew(new Color(0.18f, 0.58f, 1.0f), new Color(0.02f, 0.07f, 0.16f), 0.38f);
             coat = Mats.LitNew(new Color(0.95f, 0.96f, 0.98f), null, 0.2f);
             rig = new GameObject("GloveHands").transform;
             right = BuildHand(true);
@@ -80,10 +72,8 @@ namespace PCR
             right.Root.gameObject.SetActive(false); left.Root.gameObject.SetActive(false);
         }
 
-        // ------------------------------------------------------------------ construction
         static readonly System.Collections.Generic.Dictionary<string, Mesh> meshCache = new System.Collections.Generic.Dictionary<string, Mesh>();
 
-        /// <summary>A capsule along +z from 0 to len whose radius tapers from r0 to r1, with rounded ends (so joints overlap smoothly).</summary>
         static Mesh Tapered(float r0, float r1, float len)
         {
             string key = $"{r0:F4}|{r1:F4}|{len:F4}";
@@ -111,19 +101,16 @@ namespace PCR
         Hand BuildHand(bool isRight)
         {
             var h = new Hand { Right = isRight };
-            float m = isRight ? 1f : -1f;                 // mirror for the left hand
+            float m = isRight ? 1f : -1f;
             h.Root = new GameObject(isRight ? "RightHand" : "LeftHand").transform;
             h.Root.SetParent(rig, false);
-            // resting pose: lower corners of the view, back of the hand towards the player, fingertips angled inward
             h.RestPos = new Vector3(0.15f * m, -0.13f, 0.40f);
             h.RestRot = Quaternion.Euler(-12f, -12f * m, 10f * m);
             h.Root.localPosition = h.RestPos; h.Root.localRotation = h.RestRot;
 
-            // Preferred: the rigged human hand model (Assets/Resources/PCRModels/Hands). Fallback: the procedural hand below.
             var model = Resources.Load<GameObject>("PCRModels/Hands/" + (isRight ? "RightHand" : "LeftHand"));
             if (model != null && BuildFromModel(h, model)) { FinishHand(h); return h; }
 
-            // palm: back of the hand (a gentle dome), heel of the palm, and the knuckle ridge; wrist tapers into the cuff
             Part(h, PrimitiveType.Sphere, "Back", h.Root, new Vector3(0, 0.004f, 0.055f), new Vector3(0.084f, 0.030f, 0.098f));
             Part(h, PrimitiveType.Sphere, "Heel", h.Root, new Vector3(-0.004f * m, -0.006f, 0.022f), new Vector3(0.076f, 0.034f, 0.062f));
             Part(h, PrimitiveType.Sphere, "Ridge", h.Root, new Vector3(0, 0.002f, 0.094f), new Vector3(0.082f, 0.026f, 0.030f));
@@ -137,7 +124,6 @@ namespace PCR
                 float r = f == 4 ? 0.0092f : f == 3 ? 0.0100f : 0.0105f;
                 h.Fingers[f] = Finger(h, h.Root, new Vector3(FingerX[f - 1] * m, 0, FingerZ[f - 1]), Quaternion.Euler(0, FingerSplay[f - 1] * m, 0), SegLen[f], r, 3);
             }
-            // thumb: sits low on the palm, angled out, with a web of glove between it and the index
             h.ThumbBase = new GameObject("ThumbBase").transform;
             h.ThumbBase.SetParent(h.Root, false);
             h.ThumbBase.localPosition = new Vector3(-0.036f * m, -0.004f, 0.034f);
@@ -146,7 +132,6 @@ namespace PCR
             Part(h, PrimitiveType.Sphere, "Web", h.Root, new Vector3(-0.026f * m, -0.002f, 0.072f), new Vector3(0.030f, 0.014f, 0.040f));
             h.Fingers[0] = Finger(h, h.ThumbBase, Vector3.zero, Quaternion.identity, SegLen[0], 0.0125f, 2);
 
-            // rolled glove cuff at the wrist, coat sleeve beyond it when the lab coat is on
             h.GloveCuff = MeshPart(h, "Cuff", h.Root, new Vector3(0, 0, -0.075f), Quaternion.identity, Tapered(0.040f, 0.042f, 0.035f)).gameObject;
             h.GloveCuff.transform.localScale = new Vector3(1.12f, 0.88f, 1f);
             var sl = Part(h, PrimitiveType.Cylinder, "Sleeve", h.Root, new Vector3(0, 0.002f, -0.17f), new Vector3(0.115f, 0.12f, 0.115f), Quaternion.Euler(90, 0, 0));
@@ -167,7 +152,6 @@ namespace PCR
             }
         }
 
-        /// <summary>Use the rigged XR hand mesh: find its finger bones by name, work out each finger's curl axis, wear the glove material, add cuff and sleeve.</summary>
         bool BuildFromModel(Hand h, GameObject prefab)
         {
             string px = h.Right ? "R_" : "L_";
@@ -190,8 +174,6 @@ namespace PCR
             }
             if (!ok) { Destroy(model); Debug.LogWarning("[PCR] Hand model bones not found; using the procedural hand."); return false; }
 
-            // Orient the model: fingers along +z, palm facing down. The rig's own axes are not assumed: the finger direction is wrist to
-            // middle fingertip, and the palm side is the way that fingertip moves when the finger curls.
             var fingerDir = h.Root.InverseTransformDirection(tips[2].position - wrist.position).normalized;
             var axis = DetectCurlAxis(chains[2], tips[2], palm);
             var restRot = chains[2][0].localRotation;
@@ -231,7 +213,6 @@ namespace PCR
             return true;
         }
 
-        /// <summary>Rigs differ in bone axes, so find the local axis (and sign) that moves the fingertip closest to the palm: that is flexion.</summary>
         static Vector3 DetectCurlAxis(Transform[] chain, Transform tip, Transform palm)
         {
             var axes = new[] { Vector3.right, Vector3.up, Vector3.forward };
@@ -277,12 +258,11 @@ namespace PCR
             return go.transform;
         }
 
-        /// <summary>A finger: nested joints, each a tapered capsule along +z (radius shrinks towards the tip). Curl rotates each joint about its local x axis.</summary>
         Transform[] Finger(Hand h, Transform parent, Vector3 pos, Quaternion rot, float[] lens, float radius, int joints)
         {
             var js = new Transform[joints];
             Transform p = parent;
-            float[] taper = joints == 3 ? new[] { 1f, 0.9f, 0.82f, 0.68f } : new[] { 1f, 0.88f, 0.72f };   // radius at each joint boundary
+            float[] taper = joints == 3 ? new[] { 1f, 0.9f, 0.82f, 0.68f } : new[] { 1f, 0.88f, 0.72f };
             for (int i = 0; i < joints; i++)
             {
                 var j = new GameObject("J" + i).transform;
@@ -308,7 +288,6 @@ namespace PCR
             }
         }
 
-        // ------------------------------------------------------------------ public API
         public void Show(bool visible) { right.Root.gameObject.SetActive(visible); left.Root.gameObject.SetActive(visible); }
         public void SetGloved(bool on) { gloved = on; ApplyMaterials(); if (on) { right.GloveCuff.SetActive(true); left.GloveCuff.SetActive(true); } }
         public void SetSleeves(bool on) { sleeves = on; right.Sleeve.SetActive(on); left.Sleeve.SetActive(on); }
@@ -324,12 +303,10 @@ namespace PCR
 
         public void SetThumbPress(bool isRight, float amount) { H(isRight).ThumbPress = Mathf.Clamp01(amount); }
 
-        /// <summary>Shifts both hands' resting position (used to bring them to the middle of the view for inspection shots).</summary>
         public void ShiftRest(Vector3 d) { right.RestPos += new Vector3(-d.x, d.y, d.z); left.RestPos += new Vector3(d.x, d.y, d.z); }
 
         public Vector3 HoldWorldPosition(bool isRight) => H(isRight).HoldPoint.position;
 
-        /// <summary>Reach to a world pose (palm-down, fingers towards the target). In XR the controller moves, so this only waits.</summary>
         public IEnumerator ReachTo(bool isRight, Vector3 worldPos, float seconds = 0.45f)
         {
             var h = H(isRight);
@@ -348,7 +325,6 @@ namespace PCR
             h.Root.position = worldPos; h.Root.rotation = toRot;
         }
 
-        /// <summary>Move the hand so that its hold point sits at worldPos (used to carry an item to a spot).</summary>
         public IEnumerator CarryTo(bool isRight, Vector3 holdWorldPos, float seconds = 0.6f, Quaternion? rot = null)
         {
             var h = H(isRight);
@@ -385,7 +361,6 @@ namespace PCR
             SetPose(isRight, HandPose.Relaxed);
         }
 
-        /// <summary>Put an item in the hand (it follows the hand until released).</summary>
         public void Hold(bool isRight, Transform item, Vector3 localPos, Vector3 localEuler)
         {
             var h = H(isRight);
@@ -406,14 +381,12 @@ namespace PCR
 
         public Transform Held(bool isRight) => H(isRight).Held;
 
-        /// <summary>Fingertip world position of the index finger (for pressing buttons).</summary>
         public Vector3 IndexTip(bool isRight)
         {
             var j = H(isRight).Fingers[1];
             return j[2].TransformPoint(new Vector3(0, 0, SegLen[1][2]));
         }
 
-        // ------------------------------------------------------------------ attachment + update
         void Attach()
         {
             var cam = Camera.main;
@@ -426,7 +399,7 @@ namespace PCR
                 if (t.name == "Left Controller" || t.name == "LeftHand Controller") lc = t;
                 else if (t.name == "Right Controller" || t.name == "RightHand Controller") rc = t;
             }
-            if (lc != null && rc != null)    // headset or the XR simulator: the controllers are the hands, so the gloves stay hidden
+            if (lc != null && rc != null)
             {
                 left.Root.SetParent(lc, false); right.Root.SetParent(rc, false);
                 left.RestPos = Vector3.zero; right.RestPos = Vector3.zero;
@@ -453,13 +426,13 @@ namespace PCR
         void LateUpdate()
         {
             if (!attached) { Attach(); if (!attached) return; }
+            if (hands == null) return;
             float k = 1f - Mathf.Exp(-14f * Time.deltaTime);
             float bob = Mathf.Sin(Time.time * 1.4f);
             foreach (var h in hands)
             {
                 for (int f = 0; f < 5; f++)
                 {
-                    // a little life: slow, uneven drift per finger so the hands are never frozen
                     float drift = (Mathf.PerlinNoise(Time.time * 0.45f + f * 3.7f, h.Right ? 0.3f : 9.1f) - 0.5f) * 0.10f;
                     h.Curl[f] = Mathf.Lerp(h.Curl[f], Mathf.Clamp01(h.Target[f] + drift * (1f - h.Target[f] * 0.6f)), k);
                     float c = h.Curl[f] + (f == 0 ? h.ThumbPress * 0.5f : 0f);
@@ -470,7 +443,6 @@ namespace PCR
                         js[j].localRotation = h.BoneRest[f][j] * Quaternion.AngleAxis(a, h.CurlAxis[f]);
                     }
                 }
-                // idle breathing sway when not busy
                 if (!h.Busy && !xr)
                 {
                     float m = h.Right ? 1f : -1f;

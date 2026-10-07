@@ -3,7 +3,6 @@ using UnityEngine;
 
 namespace PCR
 {
-    /// <summary>Small helpers shared by the onboarding and experiment actions.</summary>
     public static class LabUtil
     {
         public static Bounds BoundsOf(GameObject go)
@@ -21,7 +20,6 @@ namespace PCR
 
         public static Vector3 Center(GameObject go) => BoundsOf(go).center;
 
-        /// <summary>A point a little in front of the target, on the player's side, where a hand should stop to touch it.</summary>
         public static Vector3 Approach(GameObject go, float distance = 0.2f)
         {
             var c = Center(go);

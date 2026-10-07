@@ -9,14 +9,10 @@ using UnityEngine.XR.Interaction.Toolkit;
 
 namespace PCR.EditorTools
 {
-    /// <summary>
-    /// PCR Tools menu. Run in order:  1 Setup Project  ->  (wait for import/compile)  ->  Build Both Scenes.
-    /// </summary>
     public static class PcrTools
     {
         const string OldFolder = "Assets/Scenes/Old";
 
-        // ---------------------------------------------------------------- 1. Setup
         [MenuItem("PCR Tools/1 - Setup Project (XR samples, Quest, shaders)")]
         public static void Setup()
         {
@@ -72,7 +68,6 @@ namespace PCR.EditorTools
         static void ConfigurePlayerSettings()
         {
             PlayerSettings.colorSpace = ColorSpace.Linear;
-            // Meta Quest (standalone Android) defaults
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel29;
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
@@ -87,17 +82,14 @@ namespace PCR.EditorTools
             {
                 var asset = AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(path);
                 if (asset == null) continue;
-                asset.msaaSampleCount = 4;     // MSAA is the right AA for VR
+                asset.msaaSampleCount = 4;
                 asset.renderScale = 1f;
                 asset.shadowDistance = 20f;
-                if (path.Contains("Mobile")) asset.supportsHDR = false; // cheaper on Quest
+                if (path.Contains("Mobile")) asset.supportsHDR = false;
                 EditorUtility.SetDirty(asset);
             }
         }
 
-        // ---------------------------------------------------------------- 2. Scenes
-        // The old five-scene plan is archived (define PCR_LEGACY to compile these builders); they write into Assets/Scenes/Old
-        // and never touch Build Settings. The current scenes are built by the menu items below the legacy block.
 #if PCR_LEGACY
         [MenuItem("PCR Tools/Legacy/Build old Scene 1 (Landing)")]
         public static void BuildOldScene1() => BuildScene(OldFolder + "/Scene1_Landing.unity", Vector3.zero, 0f, go => go.AddComponent<Scene1Controller>());
@@ -109,15 +101,14 @@ namespace PCR.EditorTools
         public static void BuildOldLab() => BuildScene(OldFolder + "/Scene6_PCRLab.unity", new Vector3(-4.8f, 0, -4.3f), -141f, go => go.AddComponent<LabController>());
 #endif
 
-        // ---------------------------------------------------------------- Scene 1 (Journey Through Time)
         const string Scene1Path = "Assets/Scenes/Scene1_Journey.unity";
         const string StepsFolder = "Assets/Resources/Steps";
 
         [MenuItem("PCR Tools/Build Scene 1 (Journey Through Time)")]
         public static void BuildScene1Journey()
         {
+            PcrLabPrefab.Save();
             var seq = CreateScene1Steps();
-            // spawn inside the lab entrance, looking towards the coat hook and the DNA beyond
             BuildScene(Scene1Path, new Vector3(-4.8f, 0f, -4.3f), -141f, go =>
             {
                 var jc = go.AddComponent<JourneyController>();
@@ -130,7 +121,6 @@ namespace PCR.EditorTools
             Debug.Log("[PCR] Built Scene1_Journey and the Scene1_Steps asset, and set Build Settings. Press Play.");
         }
 
-        /// <summary>Scene 1 steps, straight from the final script's flow. Edit the asset (or this list) to change the flow.</summary>
         static StepSequence CreateScene1Steps()
         {
             System.IO.Directory.CreateDirectory(StepsFolder);
@@ -186,7 +176,7 @@ namespace PCR.EditorTools
             {
                 var xr = (GameObject)PrefabUtility.InstantiatePrefab(xrPrefab);
                 xr.transform.SetParent(rigRoot.transform, false);
-                xr.SetActive(false); // RigSelector decides at runtime
+                xr.SetActive(false);
                 sel.XrRig = xr;
             }
             else Debug.LogWarning("[PCR] XR Origin prefab not found. Run 'PCR Tools > 1 - Setup Project' and wait for the sample import, then rebuild. Desktop fallback rig will be used.");
@@ -196,7 +186,7 @@ namespace PCR.EditorTools
             {
                 var sim = (GameObject)PrefabUtility.InstantiatePrefab(simPrefab);
                 sim.transform.SetParent(rigRoot.transform, false);
-                sel.Simulator = sim; // active = use XR rig with simulated controllers in the editor
+                sel.Simulator = sim;
             }
 
             var desktop = new GameObject("DesktopRig");
