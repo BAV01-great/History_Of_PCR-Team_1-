@@ -1,5 +1,7 @@
+# Ignore everything at the repo root by default
 /*
 
+# Re-include only what should be tracked at the root
 !/.gitignore
 !/README.md
 !/Assets/
@@ -7,16 +9,38 @@
 !/ProjectSettings/
 !/3D Designs/
 !/Tools/
+!/Victor/
 
 /Tools/*
 !/Tools/export_helix_fbx.py
 
+# Unity junk inside the project subfolder
+/Victor/[Ll]ibrary/
+/Victor/[Tt]emp/
+/Victor/[Oo]bj/
+/Victor/[Bb]uild/
+/Victor/[Bb]uilds/
+/Victor/[Ll]ogs/
+/Victor/[Uu]ser[Ss]ettings/
+/Victor/[Mm]emoryCaptures/
+/Victor/[Rr]ecordings/
+/Victor/.vs/
+/Victor/.idea/
+
+# Generated files and build artifacts (any depth)
+*.csproj
+*.sln
+*.pidb
+*.pdb
+*.apk
+*.aab
+*.unitypackage
+
+# OS and editor
 .DS_Store
 Thumbs.db
 *.log
 *.tmp
 *.swp
 *~
-*.md
-!/README.md
 .vscode/
