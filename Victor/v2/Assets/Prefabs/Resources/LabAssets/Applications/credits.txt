@@ -1,0 +1,7 @@
+diagnostics.jpg: PCR machine.jpg | Public domain | Tinojasontran | https://commons.wikimedia.org/wiki/File:PCR_machine.jpg
+genetic.jpg: DNA sequencing interferogram.png | Public domain |  | https://commons.wikimedia.org/wiki/File:DNA_sequencing_interferogram.png
+infectious.jpg: MERS-CoV thin section.jpg | Public domain | Maureen Metcalfe/Azaibi Tamin | https://commons.wikimedia.org/wiki/File:MERS-CoV_thin_section.jpg
+cancer.jpg: Grade 2 clear cell renal cell carcinoma, original.jpg | CC0 | Mikael Häggström, M.D. Author info - Reusing images- Conflicts of interest:  Non | https://commons.wikimedia.org/wiki/File:Grade_2_clear_cell_renal_cell_carcinoma,_original.jpg
+forensics.jpg: Autoradiograph of the first genetic fingerprint, 1984 Wellcome L0059823.jpg | CC BY 4.0 |  | https://commons.wikimedia.org/wiki/File:Autoradiograph_of_the_first_genetic_fingerprint,_1984_Wellcome_L0059823.jpg
+research.jpg: Pipetting.jpg | Public domain | Diane A. Reid (Photographer) | https://commons.wikimedia.org/wiki/File:Pipetting.jpg
+genomic.jpg: Illumina Genome Analyzer II System.jpg | CC BY 2.0 | Jon Callas from San Jose, USA | https://commons.wikimedia.org/wiki/File:Illumina_Genome_Analyzer_II_System.jpg
