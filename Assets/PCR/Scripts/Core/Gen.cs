@@ -4,7 +4,6 @@ using UnityEngine.Rendering;
 
 namespace PCR
 {
-    /// <summary>Small helpers for building scene geometry in code.</summary>
     public static class Gen
     {
         public static GameObject Prim(PrimitiveType type, string name, Transform parent, Vector3 pos, Vector3 scale,
@@ -20,7 +19,7 @@ namespace PCR
             r.sharedMaterial = mat;
             r.shadowCastingMode = ShadowCastingMode.Off;
             r.receiveShadows = false;
-            if (!collider) Object.Destroy(go.GetComponent<Collider>());
+            if (!collider) { var col = go.GetComponent<Collider>(); if (Application.isPlaying) Object.Destroy(col); else Object.DestroyImmediate(col); }
             return go;
         }
 
@@ -59,7 +58,6 @@ namespace PCR
         }
     }
 
-    /// <summary>Flat-shaded low-poly mesh builder (prisms/boxes), merged into a single mesh = one draw call.</summary>
     public class MeshBuilder
     {
         readonly List<Vector3> v = new List<Vector3>();
@@ -80,7 +78,6 @@ namespace PCR
             else { t.Add(i); t.Add(i + 2); t.Add(i + 1); t.Add(i); t.Add(i + 3); t.Add(i + 2); }
         }
 
-        /// <summary>Open prism from a to b (no end caps) with the given radius and side count.</summary>
         public void Prism(Vector3 a, Vector3 b, float radius, int sides)
         {
             var axis = (b - a);
@@ -98,7 +95,6 @@ namespace PCR
             }
         }
 
-        /// <summary>Smooth swept tube along a path (shared vertices, smooth normals, rounded by the ring count). No end caps.</summary>
         public void Tube(IList<Vector3> path, float radius, int sides)
         {
             if (path.Count < 2) return;
@@ -109,7 +105,7 @@ namespace PCR
                 var tan = (path[Mathf.Min(i + 1, path.Count - 1)] - path[Mathf.Max(i - 1, 0)]).normalized;
                 Vector3 u;
                 if (i == 0) { var up = Mathf.Abs(tan.y) < 0.9f ? Vector3.up : Vector3.right; u = Vector3.Cross(tan, up).normalized; }
-                else { u = (prevU - tan * Vector3.Dot(prevU, tan)).normalized; }   // parallel transport: no twisting between rings
+                else { u = (prevU - tan * Vector3.Dot(prevU, tan)).normalized; }
                 var w = Vector3.Cross(tan, u);
                 prevU = u;
                 for (int s = 0; s < sides; s++)
@@ -128,7 +124,6 @@ namespace PCR
                 }
         }
 
-        /// <summary>Smooth surface through a stack of rings (all with the same point count). Normals point away from each ring's centre.</summary>
         public void Loft(IList<Vector3[]> rings, bool closeBottom = false)
         {
             if (rings.Count < 2) return;
@@ -153,7 +148,6 @@ namespace PCR
             }
         }
 
-        /// <summary>UV sphere with smooth normals.</summary>
         public void Sphere(Vector3 c, float r, int lon = 10, int lat = 7)
         {
             int baseIdx = v.Count;
@@ -175,7 +169,6 @@ namespace PCR
                 }
         }
 
-        /// <summary>Small octahedron-ish blob to cap joints.</summary>
         public void Blob(Vector3 c, float r)
         {
             var px = c + Vector3.right * r; var nx = c - Vector3.right * r;

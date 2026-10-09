@@ -3,10 +3,6 @@ using UnityEngine;
 
 namespace PCR
 {
-    /// <summary>
-    /// UI/feedback sounds. Uses Kenney's CC0 "Interface Sounds" from Resources/UiSfx when present,
-    /// falling back to the generated ProcAudio tones so nothing is ever silent.
-    /// </summary>
     public static class Sfx
     {
         static readonly Dictionary<string, AudioClip> Cache = new Dictionary<string, AudioClip>();

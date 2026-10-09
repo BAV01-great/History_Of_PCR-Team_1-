@@ -1,5 +1,3 @@
-// LEGACY (archived): belongs to the old five-scene plan. Compiled only if the scripting define PCR_LEGACY is set.
-// Kept for reuse of the station and bench code in later scenes.
 #if PCR_LEGACY
 using System.Collections;
 using UnityEngine;
@@ -7,11 +5,6 @@ using UnityEngine.Rendering;
 
 namespace PCR
 {
-    /// <summary>
-    /// Scene 1 - Landing. A glowing hologram pad in a dark molecular void, a hero DNA helix to walk towards,
-    /// drifting particles and distant helices. Approach the helix, press START JOURNEY, and hand off to Scene 2.
-    /// Everything is generated at runtime from code (VR-friendly: ~30 draw calls, no textures).
-    /// </summary>
     public class Scene1Controller : MonoBehaviour
     {
         public string NextScene = "Scene2_Problem";
@@ -39,7 +32,7 @@ namespace PCR
         {
             var rig = FindFirstObjectByType<RigSelector>();
             if (rig == null) yield break;
-            yield return new WaitForSeconds(9f); // let the welcome line play
+            yield return new WaitForSeconds(9f);
             yield return rig.WalkTo(HelixPosition + new Vector3(0, 0, -TriggerDistance + 0.4f), 1.4f);
             while (startButton == null) yield return null;
             yield return rig.FaceTowards(startButton.transform.position);
@@ -102,15 +95,12 @@ namespace PCR
         {
             var dark = Mats.Lit(new Color(0.03f, 0.05f, 0.09f), null, 0.85f, 0.6f);
             var ring = Mats.Lit(new Color(0.05f, 0.2f, 0.3f), new Color(0.1f, 0.8f, 1f) * 0.9f, 0.4f);
-            // Long runway-like pad from spawn to helix, plus a round dais under the helix.
-            // Invisible walkable floor (flat box collider; a scaled primitive cylinder would get a sphere-ish capsule collider).
             var floor = Gen.Box("FloorCollider", root, new Vector3(0, -0.1f, HelixPosition.z * 0.5f), new Vector3(60f, 0.2f, 60f), dark, true);
             Destroy(floor.GetComponent<MeshRenderer>());
             Destroy(floor.GetComponent<MeshFilter>());
             Gen.Box("Runway", root, new Vector3(0, -0.02f, HelixPosition.z * 0.5f), new Vector3(3.6f, 0.04f, HelixPosition.z + 3f), dark);
             Gen.Box("RunwayEdgeL", root, new Vector3(-1.85f, 0.0f, HelixPosition.z * 0.5f), new Vector3(0.06f, 0.06f, HelixPosition.z + 3f), ring);
             Gen.Box("RunwayEdgeR", root, new Vector3(1.85f, 0.0f, HelixPosition.z * 0.5f), new Vector3(0.06f, 0.06f, HelixPosition.z + 3f), ring);
-            // Concentric dais layers, stepped 6 mm apart to avoid depth fighting in VR.
             Gen.Prim(PrimitiveType.Cylinder, "Dais", root, HelixPosition + new Vector3(0, -0.03f, 0), new Vector3(5.2f, 0.03f, 5.2f), dark);
             Gen.Prim(PrimitiveType.Cylinder, "DaisRing1", root, HelixPosition + new Vector3(0, 0.0f, 0), new Vector3(5.25f, 0.012f, 5.25f), ring);
             Gen.Prim(PrimitiveType.Cylinder, "DaisRing2", root, HelixPosition + new Vector3(0, 0.008f, 0), new Vector3(3.6f, 0.012f, 3.6f), dark);
@@ -120,7 +110,6 @@ namespace PCR
 
         void BuildGuidePath()
         {
-            // Chevrons that pulse towards the helix, so "move towards the helix" needs no explanation.
             var m = Mats.Lit(new Color(0.1f, 0.3f, 0.4f), new Color(0.2f, 0.9f, 1f) * 1.0f, 0.3f);
             for (int i = 0; i < 6; i++)
             {
@@ -136,15 +125,12 @@ namespace PCR
 
         void BuildHero()
         {
-            // Use the team's Blender model if it has been dropped in Assets/Resources/PCRModels/DNA_Helix_Whole.(fbx|prefab);
-            // 5x scale turns the 60 cm model into a 3 m hero helix. Otherwise fall back to the procedural helix.
             var model = UseTeamHelixModel ? Resources.Load<GameObject>("PCRModels/DNA_Helix_Whole") : null;
             if (model != null)
                 hero = DnaHelix.WrapModel(root, "HeroHelix", HelixPosition + new Vector3(0, 0.35f, 0), model, 3.2f);
             else
                 hero = DnaHelix.Create(root, "HeroHelix", HelixPosition + new Vector3(0, 0.35f, 0), 34, 0.42f, 0.095f, 34f, 11, 0.8f);
             hero.SpinDegPerSec = 14f;
-            // Soft halo behind the helix
             var halo = Gen.Prim(PrimitiveType.Quad, "Halo", root, HelixPosition + new Vector3(0, 1.9f, 0.6f), new Vector3(5f, 5f, 1f), Mats.Glow(new Color(0.1f, 0.6f, 1f, 0.16f)));
             halo.AddComponent<BillboardY>();
         }
@@ -164,7 +150,6 @@ namespace PCR
             }
         }
 
-        /// <summary>Big soft additive glows behind the helix that slowly drift through the spectrum.</summary>
         void BuildColorWash()
         {
             for (int i = 0; i < 3; i++)
@@ -202,7 +187,6 @@ namespace PCR
             var r = go.GetComponent<ParticleSystemRenderer>();
             r.sharedMaterial = Mats.Glow(Color.white);
             r.shadowCastingMode = ShadowCastingMode.Off;
-            // Pre-warm so the space is already full at spawn
             motes.Simulate(8f, true, true);
             motes.Play();
         }

@@ -4,10 +4,6 @@ using UnityEngine.Rendering;
 
 namespace PCR
 {
-    /// <summary>
-    /// Marks the next thing to interact with: a pulsing outline (inverted-hull shader "PCR/Outline") around every mesh of the target,
-    /// plus a bobbing diamond marker above it so it can be found across the room. One target at a time.
-    /// </summary>
     public class Highlighter : MonoBehaviour
     {
         static Highlighter inst;
@@ -28,7 +24,7 @@ namespace PCR
         GameObject target;
         Material outline;
         readonly List<GameObject> hulls = new List<GameObject>();
-        Transform marker;
+        Transform beacon;
         float t;
 
         void Apply(GameObject go)
@@ -55,12 +51,14 @@ namespace PCR
                     hulls.Add(h);
                 }
             }
-            // floating diamond marker
-            var m = new GameObject("HighlightMarker").transform;
-            Gen.Prim(PrimitiveType.Sphere, "Diamond", m, Vector3.zero, new Vector3(0.07f, 0.12f, 0.07f), Mats.Lit(Cyan * 0.5f, Cyan * 2.5f, 0.3f));
-            var halo = Gen.Prim(PrimitiveType.Quad, "Halo", m, Vector3.zero, Vector3.one * 0.45f, Mats.Glow(new Color(Cyan.r, Cyan.g, Cyan.b, 0.8f)));
-            halo.AddComponent<BillboardY>();
-            marker = m;
+            if (go.GetComponentInChildren<HoloButton>() == null)
+            {
+                var bb = TargetBounds();
+                float ringDia = Mathf.Clamp(Mathf.Max(bb.size.x, bb.size.z) + 0.3f, 0.6f, 1.6f);
+                beacon = new GameObject("HighlightBeacon").transform;
+                Gen.Prim(PrimitiveType.Cylinder, "BeaconRing", beacon, new Vector3(0, 0.012f, 0), new Vector3(ringDia, 0.004f, ringDia), Mats.UnlitColor(new Color(Cyan.r, Cyan.g, Cyan.b, 0.5f), true));
+                Gen.Prim(PrimitiveType.Cylinder, "BeaconColumn", beacon, new Vector3(0, 1.2f, 0), new Vector3(ringDia * 0.7f, 1.2f, ringDia * 0.7f), Mats.UnlitColor(new Color(Cyan.r, Cyan.g, Cyan.b, 0.18f), true));
+            }
             Place();
         }
 
@@ -69,8 +67,8 @@ namespace PCR
             foreach (var h in hulls) if (h != null) Destroy(h);
             hulls.Clear();
             if (outline != null) { Destroy(outline); outline = null; }
-            if (marker != null) Destroy(marker.gameObject);
-            marker = null; target = null;
+            if (beacon != null) Destroy(beacon.gameObject);
+            beacon = null; target = null;
         }
 
         Bounds TargetBounds()
@@ -88,15 +86,14 @@ namespace PCR
 
         void Place()
         {
-            if (target == null || marker == null) return;
+            if (target == null || beacon == null) return;
             var b = TargetBounds();
-            marker.position = new Vector3(b.center.x, b.max.y + 0.22f + Mathf.Sin(t * 2.4f) * 0.04f, b.center.z);
-            marker.Rotate(0, 90f * Time.deltaTime, 0, Space.World);
+            beacon.position = new Vector3(b.center.x, b.min.y, b.center.z);
         }
 
         void Update()
         {
-            if (target == null) { if (marker != null) Remove(); return; }
+            if (target == null) { if (beacon != null) Remove(); return; }
             t += Time.deltaTime;
             if (outline != null)
             {

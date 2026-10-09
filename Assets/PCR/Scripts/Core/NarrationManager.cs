@@ -6,10 +6,6 @@ using UnityEngine.UI;
 
 namespace PCR
 {
-    /// <summary>
-    /// Plays narration lines in order, with subtitles and an objective HUD that follow the head gently.
-    /// If Resources/Voiceover/{id} exists it plays that clip; otherwise subtitles stay up for a reading-time estimate.
-    /// </summary>
     public class NarrationManager : MonoBehaviour
     {
         static NarrationManager instance;
@@ -73,7 +69,6 @@ namespace PCR
             objBg.enabled = !string.IsNullOrEmpty(text);
             if (!string.IsNullOrEmpty(text))
             {
-                // size the box to the text: wide enough to read from a distance, tall enough for every line
                 const float W = 1100f;
                 objective.rectTransform.sizeDelta = new Vector2(W - 70f, 100f);
                 float h = Mathf.Max(110f, objective.preferredHeight + 50f);
@@ -90,7 +85,6 @@ namespace PCR
             if (runner == null) runner = StartCoroutine(Run());
         }
 
-        /// <summary>Show a short message in the subtitle strip (e.g. a wrong-click hint) unless a narration line is playing.</summary>
         public void ShowMessage(string text, float seconds = 3f)
         {
             if (IsSpeaking || subtitle == null) return;
@@ -107,8 +101,22 @@ namespace PCR
 
         public void Skip() => skip = true;
 
-        /// <summary>Drop everything queued and cut the current line (used when a beat is replayed or left).</summary>
         public void StopAll() { queue.Clear(); skip = true; }
+
+        static List<string> SubtitleChunks(string text, int maxChars)
+        {
+            var parts = new List<string>();
+            if (text.Length <= maxChars) { parts.Add(text); return parts; }
+            var sentences = System.Text.RegularExpressions.Regex.Split(text, @"(?<=[.!?])\s+");
+            var cur = "";
+            foreach (var sen in sentences)
+            {
+                if (cur.Length > 0 && cur.Length + 1 + sen.Length > maxChars) { parts.Add(cur); cur = sen; }
+                else cur = cur.Length == 0 ? sen : cur + " " + sen;
+            }
+            if (cur.Length > 0) parts.Add(cur);
+            return parts;
+        }
 
         IEnumerator Run()
         {
@@ -118,15 +126,26 @@ namespace PCR
                 string text = PcrText.Get(id);
                 var clip = Resources.Load<AudioClip>("Voiceover/" + id);
                 IsSpeaking = true;
-                subtitle.text = text;
                 subBg.enabled = true;
                 float dur;
                 if (clip != null) { voice.clip = clip; voice.Play(); dur = clip.length + 0.35f; }
-                else dur = Mathf.Max(2.5f, text.Length / 14f + 1.2f);
+                else { dur = Mathf.Max(2.5f, text.Length / 14f + 1.2f); Debug.Log("[PCR] No voice-over clip for '" + id + "' (Resources/Voiceover/" + id + "), using timed subtitles."); }
+                var chunks = SubtitleChunks(text, 150);
+                var ends = new float[chunks.Count]; int total = 0;
+                foreach (var c in chunks) total += c.Length;
+                int acc = 0;
+                for (int c = 0; c < chunks.Count; c++) { acc += chunks[c].Length; ends[c] = (clip != null ? clip.length : dur) * acc / Mathf.Max(1, total); }
 
                 float t = 0f;
                 skip = false;
-                while (t < dur && !skip) { t += Time.deltaTime; yield return null; }
+                while (t < dur && !skip)
+                {
+                    int shown = 0;
+                    while (shown < chunks.Count - 1 && t > ends[shown]) shown++;
+                    if (subtitle.text != chunks[shown]) subtitle.text = chunks[shown];
+                    t += Time.deltaTime;
+                    yield return null;
+                }
                 voice.Stop();
                 subtitle.text = "";
                 subBg.enabled = false;

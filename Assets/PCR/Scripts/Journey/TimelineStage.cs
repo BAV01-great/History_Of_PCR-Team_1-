@@ -5,13 +5,6 @@ using UnityEngine.UI;
 
 namespace PCR
 {
-    /// <summary>
-    /// The timeline environment: a dark navy space staged far from the lab inside the same scene (so the lab-to-timeline change is a
-    /// flash, not a scene load). A curved timeline wraps in front of the player and stays visible for the whole history section;
-    /// the current stop is highlighted. A large info panel and the NEXT / REPLAY / PREVIOUS / EXPLORE buttons sit to the left, and
-    /// the milestone visuals play in the VisualRoot area in front.
-    /// Layout (player at Spot looking +z): visuals ahead at (0.7, 1.45, 3.3); panel left at (-1.25, 1.3, 2.5) with the year banner above it; timeline arc at radius 3.6, height 2.65 (above the banner so they never overlap).
-    /// </summary>
     public class TimelineStage : MonoBehaviour
     {
         public Vector3 Spot { get; private set; }
@@ -61,11 +54,9 @@ namespace PCR
 
             BuildArc();
             BuildMotes();
-            BuildBackdrop();
 
-            // info panel (left), year banner above it
             var panelPos = Spot + new Vector3(-1.25f, 1.42f, 2.5f);
-            Panel = HoloPanel.Create(Root, panelPos, new Vector2(1300, 900), "TITLE", "body", Ui.Cyan, 64, 44);   // placeholders give the text boxes their height; Set() replaces them
+            Panel = HoloPanel.Create(Root, panelPos, new Vector2(1300, 900), "TITLE", "body", Ui.Cyan, 64, 44);
             Panel.transform.rotation = FaceAway(panelPos);
             var yc = Ui.Canvas("YearBanner", Root, new Vector2(1300, 260), panelPos + new Vector3(0, 0.7f, 0));
             yc.transform.rotation = FaceAway(yc.transform.position);
@@ -73,8 +64,7 @@ namespace PCR
             Panel.gameObject.SetActive(false); yc.gameObject.SetActive(false);
             panelRoot = Panel.gameObject; bannerRoot = yc.gameObject;
 
-            // buttons under the panel
-            var bp = Spot + new Vector3(-1.25f, 0.80f, 2.3f);   // above the hands' resting height, just under the panel
+            var bp = Spot + new Vector3(-1.25f, 0.80f, 2.3f);
             Next = Button("NEXT  >", new Color(0.1f, 0.85f, 1f), bp, new Vector2(0.78f, 0.26f), 58, "next_button");
             Previous = Button("<  BACK", new Color(0.35f, 0.5f, 0.8f), bp + new Vector3(-1.05f, 0f, -0.04f), new Vector2(0.5f, 0.2f), 40, null);
             Replay = Button("REPLAY", new Color(0.35f, 0.5f, 0.8f), bp + new Vector3(1.05f, 0f, 0.04f), new Vector2(0.5f, 0.2f), 40, null);
@@ -150,21 +140,6 @@ namespace PCR
             ps.Simulate(6f, true, true); ps.Play();
         }
 
-        void BuildBackdrop()
-        {
-            // a few dim helices far out, for depth
-            for (int i = 0; i < 5; i++)
-            {
-                // out at the sides and behind, never in the middle of the view where the milestone visuals play
-                float side = i % 2 == 0 ? -1f : 1f;
-                var p = Spot + new Vector3(side * (7.5f + i * 1.2f), 0.4f + i * 0.35f, 5f + i * 1.6f);
-                var h = DnaHelix.Create(Root, "BackdropHelix" + i, p, 22, 0.3f, 0.14f, 36f, 40 + i, 0.35f);
-                h.SpinDegPerSec = 5f + i * 2f;
-                h.transform.rotation = Quaternion.Euler(0, 0, (i - 2) * 12f);
-            }
-        }
-
-        // ------------------------------------------------------------------ state
         public void SetCurrent(int i)
         {
             current = i;

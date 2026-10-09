@@ -2,7 +2,6 @@ using UnityEngine;
 
 namespace PCR
 {
-    // Small reusable behaviours shared by the scenes.
     public class HueCycle : MonoBehaviour
     {
         public float Offset, Speed = 0.05f, Alpha = 0.4f;
@@ -11,6 +10,9 @@ namespace PCR
         void Awake() { r = GetComponent<Renderer>(); mpb = new MaterialPropertyBlock(); }
         void Update()
         {
+            if (r == null) r = GetComponent<Renderer>();
+            if (r == null) return;
+            if (mpb == null) mpb = new MaterialPropertyBlock();
             var c = Color.HSVToRGB(Mathf.Repeat(Offset + Time.time * Speed, 1f), 0.8f, 1f);
             c.a = Alpha;
             r.GetPropertyBlock(mpb);

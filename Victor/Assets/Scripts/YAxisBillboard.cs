@@ -1,11 +1,10 @@
 using UnityEngine;
 
-// Rotates a card around the Y axis only, so it always faces the player and stays upright.
 public class YAxisBillboard : MonoBehaviour
 {
-    public Transform target;          // leave empty to use Camera.main (the headset camera)
-    public bool flip = false;         // tick if the card appears backwards or mirrored
-    public float smoothing = 0f;      // 0 = instant, ~5-10 = gentle turning
+    public Transform target;
+    public bool flip = false;
+    public float smoothing = 0f;
 
     void Start()
     {
@@ -16,8 +15,6 @@ public class YAxisBillboard : MonoBehaviour
     {
         if (!target) return;
 
-        // Direction from the player to the card, flattened so only Y rotation is used.
-        // A world-space UI canvas is readable when its forward points away from the viewer.
         Vector3 dir = transform.position - target.position;
         dir.y = 0f;
         if (dir.sqrMagnitude < 0.0001f) return;

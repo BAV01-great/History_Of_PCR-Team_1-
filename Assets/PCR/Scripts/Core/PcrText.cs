@@ -2,17 +2,10 @@ using System.Collections.Generic;
 
 namespace PCR
 {
-    /// <summary>
-    /// Every narration line in Scenes 1 and 5, keyed by ID. Subtitles come from here.
-    /// To add voiceover, drop an audio file named exactly like the ID into
-    /// Assets/Resources/Voiceover/ (e.g. s1_welcome.wav). No code changes needed.
-    /// Text follows Script.docx with typos fixed.
-    /// </summary>
     public static class PcrText
     {
         public static readonly Dictionary<string, string> Lines = new Dictionary<string, string>
         {
-            // ---- Scene 1: Landing ----
             ["s1_welcome"] =
                 "Welcome to the world of unlimited possibility. This journey will take you through how one of the " +
                 "greatest molecular biology techniques came to be. Move towards the DNA helix to begin your journey.",
@@ -21,7 +14,6 @@ namespace PCR
                 "DNA sequence. But PCR wasn't always the technology we know today. Let's explore how it developed, " +
                 "how it works, and how it evolved.",
 
-            // ---- Scene 5: Types of PCR ----
             ["s5_intro"] =
                 "The basic principle of PCR remains the same. But over time, scientists have adapted it for different purposes.",
             ["s5_endpoint"] =
@@ -51,7 +43,6 @@ namespace PCR
             public string Explain;
         }
 
-        // Scene 5 knowledge checks (an addition to the script, Labster-style).
         public static readonly Quiz[] PcrTypeQuizzes =
         {
             new Quiz {

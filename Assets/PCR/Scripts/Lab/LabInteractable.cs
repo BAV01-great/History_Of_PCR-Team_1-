@@ -6,10 +6,6 @@ using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
 namespace PCR
 {
-    /// <summary>
-    /// An object in the lab the player can aim at and click: a stable Id (used by the step files), a hover name tag, and a global Clicked event
-    /// that the StepManager listens to. Works with the desktop rig and XR (ray/poke select) like HoloButton.
-    /// </summary>
     public class LabInteractable : MonoBehaviour, IPressable
     {
         public string Id;
@@ -18,7 +14,6 @@ namespace PCR
 
         public static LabInteractable Find(string id) { var g = StepTargets.Find(id); return g != null ? g.GetComponent<LabInteractable>() : null; }
 
-        /// <summary>Make a GameObject interactable. A box collider fitted to its renderers is added if it has none.</summary>
         public static LabInteractable Make(GameObject go, string id, string label)
         {
             var li = go.GetComponent<LabInteractable>() ?? go.AddComponent<LabInteractable>();
@@ -52,7 +47,7 @@ namespace PCR
             }
             var bc = go.AddComponent<BoxCollider>();
             bc.center = b.center;
-            bc.size = b.size + Vector3.one * 0.02f;   // a little forgiving for the ray
+            bc.size = b.size + Vector3.one * 0.02f;
         }
 
         public void SetHover(bool hovered)
@@ -69,7 +64,6 @@ namespace PCR
             Tooltip.Hide(this);
         }
 
-        /// <summary>Small world-space name tag above whatever the player is aiming at.</summary>
         static class Tooltip
         {
             static GameObject go;

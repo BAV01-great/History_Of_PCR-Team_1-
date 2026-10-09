@@ -3,11 +3,6 @@ using UnityEngine;
 
 namespace PCR
 {
-    /// <summary>
-    /// Scene 1, Journey Through Time. Dim lab, lab coat, giant DNA, approach, START JOURNEY, flash into the timeline
-    /// space, eight milestones with NEXT, EXPLORE PCR TYPES, flash back to the now bright lab and on to Scene 2.
-    /// Flow is driven by the StepSequence asset; this class reacts to step events and plays each beat.
-    /// </summary>
     public class JourneyController : MonoBehaviour
     {
         [Tooltip("Guided steps for this scene (Assets/Data/Steps/Scene1_Steps). Built by PCR Tools > Build Scene 1.")]
@@ -16,9 +11,9 @@ namespace PCR
         public string NextScene = "Scene2_Stations";
         [Tooltip("Hands-free playthrough for screen recording (Unity Recorder).")]
         public bool AutoplayDemo;
-        public const bool UseTeamHelixForHero = false;
+        public const bool UseTeamHelixForHero = true;
 
-        static readonly Vector3 DnaBase = new Vector3(1.2f, 0.88f, -2.0f);   // 1.45 m tall: centre at eye level
+        static readonly Vector3 DnaBase = new Vector3(1.2f, 0.88f, -2.0f);
         static readonly Vector3 CoatHook = new Vector3(-6.3f, 0f, -6.9f);
         static readonly Vector3 StageSpot = new Vector3(0f, 0f, 300f);
         static readonly Vector3 LandingSpot = new Vector3(0f, 0f, 600f);
@@ -47,8 +42,8 @@ namespace PCR
         {
             JourneyContent.RegisterNarration();
             root = new GameObject("Journey_World").transform;
-            LabRoom.Build(root);
-            LabLighting.Apply(0f);                       // the dim, unexplored lab
+            LabRoom.BuildOrLoad(root);
+            LabLighting.Apply(0f);
             labFogMode = RenderSettings.fogMode; labFogDensity = RenderSettings.fogDensity; labFogStart = RenderSettings.fogStartDistance; labFogEnd = RenderSettings.fogEndDistance;
             PostFx.Apply(0.3f, 1.1f);
 
@@ -81,10 +76,9 @@ namespace PCR
             if (AutoplayDemo) StartCoroutine(DemoRun());
         }
 
-        // ------------------------------------------------------------------ the dim lab
         void BuildDna()
         {
-            var teamHelix = UseTeamHelixForHero ? Resources.Load<GameObject>("PCRModels/DNA_Helix_Neon") : null;   // the team's FBX reads thin up close, so the bolder procedural helix is the hero
+            var teamHelix = UseTeamHelixForHero ? Resources.Load<GameObject>("PCRModels/DNA_Helix_Whole") : null;
             dna = teamHelix != null ? DnaHelix.WrapModel(root, "CentralDNA", DnaBase, teamHelix, 1.45f)
                                     : DnaHelix.Create(root, "CentralDNA", DnaBase, 18, 0.28f, 0.085f, 36f, 7, 1.1f);
             dna.SpinDegPerSec = 14f;
@@ -106,12 +100,11 @@ namespace PCR
             var sh = sparkles.shape; sh.shapeType = ParticleSystemShapeType.Sphere; sh.radius = 0.35f;
             sp.GetComponent<ParticleSystemRenderer>().sharedMaterial = Mats.Glow(Color.white);
 
-            // START JOURNEY floats below the DNA; hidden until the player reaches it
             var pos = DnaBase + new Vector3(0, 0.33f, -0.9f);
             startBtn = HoloButton.Create(root, pos, "START JOURNEY", new Color(0.1f, 0.85f, 1f), new Vector2(1.1f, 0.3f), 54);
             startBtn.StepId = "start_button";
             startBtn.gameObject.SetActive(false);
-            dna.gameObject.SetActive(false);               // appears after the coat, per the script ("DNA becomes visible")
+            dna.gameObject.SetActive(false);
         }
 
         IEnumerator Intro()
@@ -119,25 +112,30 @@ namespace PCR
             var fader = ScreenFader.Instance;
             fader.SetAlpha(1f);
             sound.Begin();
-            if (rig != null) rig.Teleport(LandingSpot, 0f);          // the landing comes first
+            if (rig != null) rig.Teleport(LandingSpot, 0f);
             landing.Atmosphere();
             yield return new WaitForSeconds(0.5f);
             yield return fader.FadeTo(0f, 2.2f);
-            NarrationManager.Instance.Say("s1_welcome", () => { if (!landing.Opened) NarrationManager.Instance.SetObjective("Walk to the DNA helix"); });
-            landing.PortalOpened += () => { sound.Cue("chime"); NarrationManager.Instance.SetObjective("The portal has opened around the DNA. Step into it to enter the lab"); };
+            NarrationManager.Instance.SetObjective("Walk to the DNA helix");
+            NarrationManager.Instance.Say("s1_welcome");
+            landing.PortalOpened += () =>
+            {
+                sound.Cue("chime");
+                NarrationManager.Instance.SetObjective("The portal has opened around the DNA. Step into it to enter the lab");
+            };
             yield return new WaitUntil(() => landing.Entered);
             NarrationManager.Instance.SetObjective("");
             sound.Cue("whoosh");
             fader.SetTint(Color.white);
             yield return fader.FadeTo(1f, 0.5f);
-            if (rig != null) rig.Teleport(labPos, labYaw);           // into the lab
+            if (rig != null) rig.Teleport(labPos, labYaw);
             RenderSettings.fogMode = labFogMode; RenderSettings.fogDensity = labFogDensity; RenderSettings.fogStartDistance = labFogStart; RenderSettings.fogEndDistance = labFogEnd; LabLighting.Apply(0f);
             fader.SetTint(Theme.DeepNavy);
             yield return fader.FadeTo(0f, 1.6f);
             Debug.Log("[PCR] Intro: landing done, in the lab");
             var mc = Camera.main;
             Debug.Log("[PCR] Lab view: cam=" + (mc != null ? mc.transform.position.ToString("F2") + " bg=" + mc.backgroundColor + " mask=" + mc.cullingMask + " far=" + mc.farClipPlane : "none") + " fader=" + fader.Alpha.ToString("F2") + " rigAt=" + (rig != null ? rig.ActiveRoot.position.ToString("F2") : "?") + " ambient=" + RenderSettings.ambientLight + " fog=" + RenderSettings.fogMode);
-            steps.Begin(Steps);                         // step 1: put on the lab coat
+            steps.Begin(Steps);
         }
 
         void Update()
@@ -149,7 +147,6 @@ namespace PCR
             var d = cam.transform.position - (DnaBase + new Vector3(0, 0.7f, 0)); d.y = 0;
             float dist = d.magnitude;
             if (stageReady) return;
-            // DNA hum and glow follow the player's distance (louder and higher as the user nears)
             float near = Mathf.InverseLerp(7f, ZoneRadius, dist);
             sound.SetHum(dna.transform, near);
             if (s != null && s.id == "approach_dna")
@@ -160,7 +157,6 @@ namespace PCR
             }
         }
 
-        // ------------------------------------------------------------------ step events
         void OnStepStarted(StepDef s)
         {
             if (s.id == "start_journey") { startBtn.gameObject.SetActive(true); startBtn.transform.rotation = Quaternion.LookRotation(startBtn.transform.position - Camera.main.transform.position); sound.Cue("pop"); }
@@ -185,6 +181,7 @@ namespace PCR
             dnaShown = true;
             dna.gameObject.SetActive(true);
             sound.Cue("shimmer");
+            NarrationManager.Instance.Say("s1_start");
             for (float t = 0; t < 2.5f; t += Time.deltaTime)
             {
                 float k = Mathf.SmoothStep(0, 1, t / 2.5f);
@@ -203,17 +200,17 @@ namespace PCR
             startBtn.gameObject.SetActive(false);
             for (float t = 0; t < 1.2f; t += Time.deltaTime)
             {
-                dna.SpinDegPerSec = Mathf.Lerp(14f, 3f, t / 1.2f);       // slows
-                dna.SetGlow(Mathf.Lerp(0.85f, 1.1f, t / 1.2f));              // brightens
+                dna.SpinDegPerSec = Mathf.Lerp(14f, 3f, t / 1.2f);
+                dna.SetGlow(Mathf.Lerp(0.85f, 1.1f, t / 1.2f));
                 dnaLight.intensity = Mathf.Lerp(2.4f, 3.4f, t / 1.2f);
                 yield return null;
             }
         }
 
-        // ------------------------------------------------------------------ START JOURNEY: DNA expands, flash, timeline
         IEnumerator ToTimeline()
         {
-            NarrationManager.Instance.Say("s1_start");
+            NarrationManager.Instance.StopAll();
+            startBtn.gameObject.SetActive(false);
             sound.Cue("whoosh");
             var cam = Camera.main;
             var toward = cam.transform.position + cam.transform.forward * 1.3f;
@@ -221,25 +218,24 @@ namespace PCR
             var fader = ScreenFader.Instance;
             fader.SetTint(Color.white);
             for (float t = 0; t < 1.7f; t += Time.deltaTime)
-            {                                                   // the DNA expands toward the camera
+            {
                 float k = Mathf.SmoothStep(0, 1, t / 1.7f);
                 dna.transform.position = Vector3.Lerp(from, toward + Vector3.down * 0.35f, k);
                 dna.transform.localScale = fromScale * Mathf.Lerp(1f, 1.9f, k);
-                dna.SetGlow(Mathf.Lerp(0.8f, 0.55f, k));         // low emission so the strands keep their colour; the white fade does the flash
+                dna.SetGlow(Mathf.Lerp(0.8f, 0.55f, k));
                 yield return null;
             }
             sound.Cue("flash");
-            yield return fader.FadeTo(1f, 0.45f);                // bright flash (the fade to white carries the brightness)
+            yield return fader.FadeTo(1f, 0.45f);
             if (rig != null) rig.Teleport(StageSpot, 0f);
             dna.gameObject.SetActive(false);
             LabLighting.Apply(0f);
             stageReady = true;
             sound.SetHum(null, 0f);
             fader.SetTint(Theme.DeepNavy);
-            yield return fader.FadeTo(0f, 1.3f);                 // the timeline environment appears
+            yield return fader.FadeTo(0f, 1.3f);
         }
 
-        // ------------------------------------------------------------------ milestones
         IEnumerator PlayMilestone(int i)
         {
             while (!stageReady) yield return null;
@@ -271,7 +267,6 @@ namespace PCR
             visuals.Stop();
         }
 
-        // hands reach to the button for every "press" step (the only hand action the script needs)
         IEnumerator PressAction(StepDef s, GameObject target)
         {
             var hands = GloveHands.Instance;
@@ -284,7 +279,6 @@ namespace PCR
             if (s.id != "explore") sound.Cue("next");
         }
 
-        // ------------------------------------------------------------------ to Scene 2
         IEnumerator ToScene2()
         {
             NarrationManager.Instance.Say("to_scene2");
@@ -293,7 +287,6 @@ namespace PCR
             stage.HidePanel();
             stage.ShowButtons(false, false);
             yield return new WaitForSeconds(1.2f);
-            // the DNA reappears in front of the player and expands toward them
             var cam = Camera.main;
             dna.gameObject.SetActive(true);
             dna.transform.localScale = Vector3.one * 0.2f;
@@ -312,30 +305,29 @@ namespace PCR
             }
             sound.Cue("flash");
             yield return fader.FadeTo(1f, 0.45f);
-            // back in the lab, now bright and active
             if (rig != null) rig.Teleport(new Vector3(-0.2f, 0f, -3.6f), 0f);
+            startBtn.gameObject.SetActive(false);
             dna.gameObject.SetActive(false);
             sound.SetHum(null, 0f);
             LabLighting.Apply(0.15f);
             fader.SetTint(Theme.DeepNavy);
             yield return fader.FadeTo(0f, 0.6f);
             sound.Cue("powerup");
-            yield return LabLighting.Fade(0.15f, 1f, 3.5f);       // lights power up; the mix warms
+            yield return LabLighting.Fade(0.15f, 1f, 3.5f);
             sound.OnSceneTwo();
-            SceneFlow.LoadNext(this, NextScene, () => NarrationManager.Instance.ShowMessage("Scene 2 (PCR types) is not built yet. The lab stays lit.", 5f));
+            SceneFlow.LoadNext(this, NextScene);
         }
 
-        // ------------------------------------------------------------------ demo (screen recording)
         IEnumerator WaitStep(string id) { yield return new WaitUntil(() => steps.Current != null && steps.Current.id == id); }
 
         IEnumerator DemoRun()
         {
             yield return new WaitForSeconds(3.5f);
-            var walk = StartCoroutine(rig.WalkTo(LandingSpot + new Vector3(0, 0, 6.4f), 1.8f));     // to the helix: the portal opens
+            var walk = StartCoroutine(rig.WalkTo(LandingSpot + new Vector3(0, 0, 6.4f), 1.8f));
             yield return new WaitUntil(() => landing.Opened);
             StopCoroutine(walk);
             yield return new WaitForSeconds(2.2f);
-            walk = StartCoroutine(rig.WalkTo(landing.HelixPos, 1.6f));                               // then into the ring
+            walk = StartCoroutine(rig.WalkTo(landing.HelixPos, 1.6f));
             yield return new WaitUntil(() => landing.Entered);
             StopCoroutine(walk);
             yield return WaitStep("wear_coat");
@@ -347,6 +339,7 @@ namespace PCR
             yield return rig.WalkTo(DnaBase + new Vector3(-1.6f, 0, -0.6f), 1.5f);
             yield return rig.FaceTowards(DnaBase + Vector3.up * 0.7f);
             yield return WaitStep("start_journey");
+            while (NarrationManager.Instance.IsSpeaking) yield return null;
             yield return new WaitForSeconds(1.5f);
             StepTargets.Raise("start_button");
             foreach (var m in JourneyContent.Milestones)

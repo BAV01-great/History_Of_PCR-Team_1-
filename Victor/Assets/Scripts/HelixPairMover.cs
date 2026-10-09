@@ -1,10 +1,5 @@
 using UnityEngine;
 
-// Attach to the PARENT of the two strand objects.
-// The pair travels to random points inside a box while the two strands spiral
-// around the travel path, forming a double helix. Each strand leaves a Trail Renderer
-// behind it. After a random lifetime the pair fades out and reappears somewhere else,
-// so it looks like a different object.
 public class HelixPairMover : MonoBehaviour
 {
     [Header("Strands (drag the two child objects here)")]
@@ -18,24 +13,24 @@ public class HelixPairMover : MonoBehaviour
     [Header("Roaming box (in this object's local space)")]
     public Vector3 boxCenter = Vector3.zero;
     public Vector3 boxSize = new Vector3(4f, 2f, 4f);
-    public float minTravelDistance = 1.5f;   // new targets are at least this far away
+    public float minTravelDistance = 1.5f;
     public Vector2 speedRange = new Vector2(0.4f, 1.0f);
-    public float turnSpeed = 120f;           // degrees/sec the path can steer
+    public float turnSpeed = 120f;
 
     [Header("Helix shape")]
-    public float radius = 0.1f;              // distance of each strand from the path
-    public float rotationsPerSecond = 1.5f;  // spin rate; lower = stretched helix
+    public float radius = 0.1f;
+    public float rotationsPerSecond = 1.5f;
 
     [Header("Lifetime")]
-    public Vector2 lifetimeRange = new Vector2(5f, 12f); // min/max seconds before going off
-    public bool respawnOnTimeout = true;     // false = just pick a new target instead
-    public float fadeTime = 0.5f;            // shrink out / grow in duration
+    public Vector2 lifetimeRange = new Vector2(5f, 12f);
+    public bool respawnOnTimeout = true;
+    public float fadeTime = 0.5f;
 
     const float ArriveDistance = 0.1f;
 
     Vector3 pos, heading, target, perp;
     float angle, speed, timer, visibility = 1f;
-    int fadeDir; // 0 none, -1 fading out, +1 fading in
+    int fadeDir;
 
     Vector3 baseScaleA, baseScaleB;
     float baseWidthA, baseWidthB;
@@ -67,7 +62,6 @@ public class HelixPairMover : MonoBehaviour
     {
         float dt = Time.deltaTime;
 
-        // Lifetime: when it runs out, go off (fade + respawn) or just redirect
         timer -= dt;
         if (timer <= 0f && fadeDir == 0)
         {
@@ -76,7 +70,6 @@ public class HelixPairMover : MonoBehaviour
         }
         UpdateFade(dt);
 
-        // Steer toward the target and move the helix axis
         Vector3 toTarget = target - pos;
         if (toTarget.magnitude < ArriveDistance)
         {
@@ -87,7 +80,6 @@ public class HelixPairMover : MonoBehaviour
                                         turnSpeed * Mathf.Deg2Rad * dt, 0f).normalized;
         pos += heading * speed * dt;
 
-        // Keep the helix "up" vector perpendicular to the path so it twists smoothly
         perp = Vector3.ProjectOnPlane(perp, heading).normalized;
         angle += rotationsPerSecond * Mathf.PI * 2f * dt;
 
@@ -100,7 +92,7 @@ public class HelixPairMover : MonoBehaviour
         Vector3 offset = (perp * Mathf.Cos(angle) + perp2 * Mathf.Sin(angle)) * radius;
 
         strandA.position = transform.TransformPoint(pos + offset);
-        strandB.position = transform.TransformPoint(pos - offset); // opposite side = 180 degrees apart
+        strandB.position = transform.TransformPoint(pos - offset);
     }
 
     void Respawn()
@@ -117,7 +109,7 @@ public class HelixPairMover : MonoBehaviour
         timer = Random.Range(lifetimeRange.x, lifetimeRange.y);
 
         PlaceStrands();
-        ClearTrails(); // avoids a streak from the old position to the new one
+        ClearTrails();
     }
 
     void NewTarget()
@@ -137,7 +129,7 @@ public class HelixPairMover : MonoBehaviour
             if (d >= minTravelDistance) return p;
             if (d > bestDist) { bestDist = d; best = p; }
         }
-        return best; // box too small for the minimum distance: use the farthest try
+        return best;
     }
 
     Vector3 RandomPoint()

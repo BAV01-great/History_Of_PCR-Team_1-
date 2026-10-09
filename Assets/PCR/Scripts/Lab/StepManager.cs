@@ -5,12 +5,6 @@ using UnityEngine;
 
 namespace PCR
 {
-    /// <summary>
-    /// Runs a StepSequence: highlights the next target with a pulsing outline and marker, shows a short "Step n of N" prompt, waits for the
-    /// player to press it, plays the action's animation, then moves on by itself. Wrong presses get a hint. A step can be gated (the scene
-    /// releases it when its beat is over) and an "approach" step is completed by the scene when the player reaches a zone.
-    /// Actions are plugged in with Register(); an action with no handler is a plain press.
-    /// </summary>
     public class StepManager : MonoBehaviour
     {
         public static StepManager Instance { get; private set; }
@@ -62,10 +56,9 @@ namespace PCR
         {
             var t = StepTargets.Find(s.target);
             if (t != null) Highlighter.Show(t);
-            NarrationManager.Instance.SetObjective($"Step {index + 1} of {seq.steps.Count}:  {s.prompt}");
+            NarrationManager.Instance.SetObjective(s.prompt);
         }
 
-        /// <summary>Go back to an earlier step (PREVIOUS / REPLAY): the step starts again, its gate closed.</summary>
         public void Rewind(int toIndex)
         {
             if (!running || busy || seq == null) return;
@@ -74,7 +67,6 @@ namespace PCR
             ShowStep();
         }
 
-        /// <summary>Open a gated step: the target is highlighted and accepts the press.</summary>
         public void ReleaseGate()
         {
             var s = Current;
@@ -83,7 +75,6 @@ namespace PCR
             Activate(s);
         }
 
-        /// <summary>Complete the current step from the scene (for "approach" steps, or steps finished by an event).</summary>
         public void CompleteCurrent(string stepId)
         {
             var s = Current;

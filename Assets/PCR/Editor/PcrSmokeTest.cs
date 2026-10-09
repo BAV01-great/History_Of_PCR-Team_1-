@@ -7,13 +7,6 @@ using UnityEngine;
 
 namespace PCR.EditorTools
 {
-    /// <summary>
-    /// Headless play-through of Scene 1 for checking the build without a person at the keyboard.
-    /// Run from the command line (not while the same project is open in the editor):
-    ///   Unity -batchmode -projectPath . -executeMethod PCR.EditorTools.PcrSmokeTest.RunScene1 -smokeOut Out -smokeSeconds 420
-    /// It plays the scene with Autoplay Demo on at 4x speed, saves a screenshot whenever the guided step changes (and every few seconds),
-    /// records every error, exception and assert, and exits with a report (0 = clean, 1 = problems).
-    /// </summary>
     public static class PcrSmokeTest
     {
         const string ScenePath = "Assets/Scenes/Scene1_Journey.unity";
@@ -45,7 +38,7 @@ namespace PCR.EditorTools
             var jc = Object.FindFirstObjectByType<JourneyController>();
             if (jc == null) { Finish("JourneyController not found in " + ScenePath, 1); return; }
             jc.AutoplayDemo = true;
-            if (Arg("-smokeXr", "0") == "1")      // exercise the headset path through the XR Interaction Simulator
+            if (Arg("-smokeXr", "0") == "1")
             {
                 var rs = Object.FindFirstObjectByType<RigSelector>();
                 if (rs != null && rs.Simulator != null) rs.Simulator.SetActive(true);
@@ -57,7 +50,6 @@ namespace PCR.EditorTools
             EditorApplication.isPlaying = true;
         }
 
-        // ------------------------------------------------------------------ hands gallery: every pose, one screenshot each
         static int galleryIndex = -1;
         static double galleryNext;
         static bool galleryStarted, galleryShifted;
@@ -72,11 +64,10 @@ namespace PCR.EditorTools
             Application.logMessageReceived += OnLog;
             EditorApplication.update += GalleryTick;
             startReal = EditorApplication.timeSinceStartup;
-            galleryNext = startReal + 25;      // let the scene fade in and the hands attach
+            galleryNext = startReal + 25;
             EditorApplication.isPlaying = true;
         }
 
-        // ------------------------------------------------------------------ prop close-ups from separate cameras (landing, portal, lab coat)
         static int propStage;
         public static void RunPropShots()
         {
@@ -103,15 +94,33 @@ namespace PCR.EditorTools
         static void PropTick()
         {
             double now = EditorApplication.timeSinceStartup;
-            if (!EditorApplication.isPlaying) { if (propStage >= 5 || now - startReal > 120) { EditorApplication.update -= PropTick; Finish("Prop shots done", 0); } return; }
+            if (!EditorApplication.isPlaying) { if (propStage >= 8 || now - startReal > 120) { EditorApplication.update -= PropTick; Finish("Prop shots done", 0); } return; }
             double t = now - startReal;
             var land = new Vector3(0, 0, 600);
             if (propStage == 0 && t > 38) { propStage = 1; var ls = Object.FindFirstObjectByType<LandingStage>(); if (ls != null) ls.ForceOpen(); ShotFrom("landing_wide", land + new Vector3(2.5f, 2.6f, -1f), land + new Vector3(0f, 1.6f, 10f), 70f); }
             else if (propStage == 1 && t > 42) { propStage = 2; ShotFrom("portal", land + new Vector3(0.6f, 1.6f, 4.4f), land + new Vector3(0, 1.9f, 9f)); }
-            else if (propStage == 2 && t > 44) { propStage = 3; Shot("landing_view"); var hook = new Vector3(-6.3f, 0f, -6.9f); ShotFrom("coat", hook + new Vector3(0.9f, 1.4f, 2.6f), hook + new Vector3(0, 1.15f, 0), 50f); propStage = 4; } else if (propStage == 4 && t > 54) { var mc = Camera.main; Debug.Log("[PCR] PROBE cam=" + (mc != null ? mc.transform.position.ToString() + " far=" + mc.farClipPlane + " bg=" + mc.backgroundColor + " flags=" + mc.clearFlags + " mask=" + mc.cullingMask : "none") + " fader=" + (ScreenFader.Instance != null ? ScreenFader.Instance.transform.parent != null ? ScreenFader.Instance.transform.parent.name : "noparent" : "null")); Shot("landing_view_late"); propStage = 5; EditorApplication.isPlaying = false; }
+            else if (propStage == 2 && t > 44) { propStage = 3; Shot("landing_view"); var hook = new Vector3(-6.3f, 0f, -6.9f); ShotFrom("coat", hook + new Vector3(0.9f, 1.4f, 2.6f), hook + new Vector3(0, 1.15f, 0), 50f); propStage = 4; } else if (propStage == 4 && t > 54) { var mc = Camera.main; Debug.Log("[PCR] PROBE cam=" + (mc != null ? mc.transform.position.ToString() + " far=" + mc.farClipPlane + " bg=" + mc.backgroundColor + " flags=" + mc.clearFlags + " mask=" + mc.cullingMask : "none") + " fader=" + (ScreenFader.Instance != null ? ScreenFader.Instance.transform.parent != null ? ScreenFader.Instance.transform.parent.name : "noparent" : "null")); Shot("landing_view_late"); propStage = 5; }
+            else if (propStage == 5 && t > 56)
+            {
+                propStage = 6;
+                ShotFrom("bench_wide", new Vector3(0.2f, 1.6f, 0.6f), new Vector3(-2.0f, 0.98f, 0.6f), 55f);
+                ShotFrom("bench_close", new Vector3(-0.9f, 1.3f, 0.6f), new Vector3(-2.0f, 0.98f, 0.6f), 50f);
+            }
+            else if (propStage == 6 && t > 60)
+            {
+                propStage = 7;
+                var sign = GameObject.Find("LabSign");
+                if (sign != null)
+                {
+                    var sp = sign.transform.position; var sf = sign.transform.forward;
+                    ShotFrom("sign_front", sp + sf * 7f + Vector3.up * 0.3f, sp, 45f);
+                    ShotFrom("sign_back", sp - sf * 7f + Vector3.up * 0.3f, sp, 45f);
+                }
+                else Debug.Log("[PCR] PROBE LabSign not found");
+            }
+            else if (propStage == 7 && t > 62) { propStage = 8; EditorApplication.isPlaying = false; }
         }
 
-        // ------------------------------------------------------------------ model probe: sizes and pivots of the imported team models
         public static void RunModelProbe()
         {
             outDir = Arg("-smokeOut", "SmokeOut");
@@ -132,7 +141,6 @@ namespace PCR.EditorTools
             EditorApplication.Exit(0);
         }
 
-        /// <summary>Edit-mode close-up of each team model on a grey backdrop (no play mode needed).</summary>
         public static void RunModelShots()
         {
             outDir = Arg("-smokeOut", "SmokeOut");
@@ -162,7 +170,7 @@ namespace PCR.EditorTools
             galleryStarted = true;
             var hands = GloveHands.Instance;
             if (hands == null || now < galleryNext) return;
-            if (!galleryShifted) { galleryShifted = true; hands.ShiftRest(new Vector3(-0.06f, 0.14f, 0.02f)); galleryNext = now + 1.5; return; }   // hands to the middle of the view
+            if (!galleryShifted) { galleryShifted = true; hands.ShiftRest(new Vector3(-0.06f, 0.14f, 0.02f)); galleryNext = now + 1.5; return; }
             var poses = (HandPose[])System.Enum.GetValues(typeof(HandPose));
             if (galleryIndex >= 0) Shot("hands_" + poses[galleryIndex]);
             galleryIndex++;
@@ -174,7 +182,7 @@ namespace PCR.EditorTools
         static void OnLog(string cond, string stack, LogType type)
         {
             if (type == LogType.Error || type == LogType.Exception || type == LogType.Assert)
-                if (!(stack ?? "").Contains("UnityEditor.Search")) errors.Add($"[{type}] {cond}\n    {stack?.Split('\n').FirstOrDefault()}");   // ignore Unity's own search-indexer exception in batch mode
+                if (!(stack ?? "").Contains("UnityEditor.Search")) errors.Add($"[{type}] {cond}\n    {stack?.Split('\n').FirstOrDefault()}");
             else if (type == LogType.Warning && warnings.Count < 40) warnings.Add(cond);
             else if (type == LogType.Log && cond.StartsWith("[PCR]")) steps.Add($"{(EditorApplication.timeSinceStartup - startReal):F0}s real: {cond}");
         }

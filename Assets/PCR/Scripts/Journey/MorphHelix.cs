@@ -3,16 +3,11 @@ using UnityEngine.Rendering;
 
 namespace PCR
 {
-    /// <summary>
-    /// A DNA double helix whose shape can be animated: a flat ladder that twists into a helix (1953), strands that separate (denaturation),
-    /// and complementary new strands that grow along the templates (extension). Beads and rungs are shared-material primitives
-    /// (about 100 renderers for 24 pairs), updated only when a parameter changes. Base colours follow the team key: A red, T blue, G yellow, C green.
-    /// </summary>
     public class MorphHelix : MonoBehaviour
     {
         int pairs;
         float radius, rise, beadR, rungR;
-        Transform[] a, b, ra, rb, na, nb;
+        Transform[] a, b, ra, rb, na, nb, sa, sb;
         int[] baseIdx;
         bool dirty = true;
         float twist = 36f, separation, rungScale = 1f, newProgress, newOffset = 0.05f;
@@ -40,6 +35,7 @@ namespace PCR
             backA = backA != null ? backA : Mats.Lit(new Color(0.34f, 0.38f, 0.45f), new Color(0.34f, 0.38f, 0.45f) * 0.3f, 0.55f);
             backB = backB != null ? backB : Mats.Lit(new Color(0.78f, 0.82f, 0.90f), new Color(0.78f, 0.82f, 0.90f) * 0.3f, 0.55f);
             a = new Transform[n]; b = new Transform[n]; ra = new Transform[n]; rb = new Transform[n]; na = new Transform[n]; nb = new Transform[n];
+            sa = new Transform[n - 1]; sb = new Transform[n - 1];
             baseIdx = new int[n];
             var rnd = new System.Random(seed);
             for (int i = 0; i < n; i++)
@@ -49,14 +45,17 @@ namespace PCR
                 b[i] = Gen.Prim(PrimitiveType.Sphere, "B", transform, Vector3.zero, Vector3.one * beadR * 2f, backB).transform;
                 ra[i] = Gen.Prim(PrimitiveType.Cylinder, "RungA", transform, Vector3.zero, Vector3.one * rungR, BaseMat(bi, glow * 1.2f)).transform;
                 rb[i] = Gen.Prim(PrimitiveType.Cylinder, "RungB", transform, Vector3.zero, Vector3.one * rungR, BaseMat(comp, glow * 1.2f)).transform;
-                // new-strand beads carry the base complementary to their template
+                if (i < n - 1)
+                {
+                    sa[i] = Gen.Prim(PrimitiveType.Cylinder, "BackboneA", transform, Vector3.zero, Vector3.one * beadR, backA).transform;
+                    sb[i] = Gen.Prim(PrimitiveType.Cylinder, "BackboneB", transform, Vector3.zero, Vector3.one * beadR, backB).transform;
+                }
                 na[i] = Gen.Prim(PrimitiveType.Sphere, "NewA", transform, Vector3.zero, Vector3.one * beadR * 1.6f, BaseMat(comp, glow * 1.6f)).transform;
                 nb[i] = Gen.Prim(PrimitiveType.Sphere, "NewB", transform, Vector3.zero, Vector3.one * beadR * 1.6f, BaseMat(bi, glow * 1.6f)).transform;
             }
             Refresh();
         }
 
-        /// <summary>twist: degrees per base pair (0 = flat ladder, 36 = natural). separation: how far each strand moves apart (m).</summary>
         public void Set(float twistDeg, float sep, float rungs, float newBuilt)
         {
             twist = twistDeg; separation = sep; rungScale = rungs; newProgress = newBuilt; dirty = true;
@@ -68,7 +67,6 @@ namespace PCR
         public Vector3 BeadA(int i) => a[Mathf.Clamp(i, 0, pairs - 1)].position;
         public Vector3 BeadB(int i) => b[Mathf.Clamp(i, 0, pairs - 1)].position;
 
-        /// <summary>Tint a range of pairs (e.g. the target region) with a highlight colour; null restores the natural colours.</summary>
         public void Highlight(int from, int to, Material mat)
         {
             for (int i = from; i <= to && i < pairs; i++)
@@ -92,7 +90,7 @@ namespace PCR
                 var mid = (p1 + p2) * 0.5f;
                 Rung(ra[i], p1, mid, rungScale);
                 Rung(rb[i], p2, mid, rungScale);
-                // new complementary beads sit just inside each template strand and appear from the bottom as newProgress rises
+                if (i > 0) { Segment(sa[i - 1], a[i - 1].localPosition, p1); Segment(sb[i - 1], b[i - 1].localPosition, p2); }
                 float shown = newProgress * pairs;
                 bool on = i < shown;
                 Vector3 inward = (p2 - p1).normalized;
@@ -105,6 +103,14 @@ namespace PCR
                     na[i].localScale = nb[i].localScale = Vector3.one * beadR * 1.6f * pop;
                 }
             }
+        }
+
+        void Segment(Transform t, Vector3 from, Vector3 to)
+        {
+            var d = to - from;
+            t.localPosition = from + d * 0.5f;
+            t.localRotation = Quaternion.FromToRotation(Vector3.up, d.normalized);
+            t.localScale = new Vector3(beadR * 1.1f, d.magnitude * 0.5f, beadR * 1.1f);
         }
 
         void Rung(Transform t, Vector3 from, Vector3 to, float scale)

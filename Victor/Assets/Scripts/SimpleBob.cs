@@ -1,11 +1,9 @@
 using UnityEngine;
 
-// Floats an object up and down while enabled. Disable it when interaction begins.
-// On disable, the object returns to its original local position.
 public class SimpleBob : MonoBehaviour
 {
-    public float height = 0.05f;  // how far it moves up and down, in meters
-    public float speed = 1.5f;    // bobs per ~6.3 seconds; raise for faster bobbing
+    public float height = 0.05f;
+    public float speed = 1.5f;
     public bool randomizePhase = true;
 
     Vector3 startPos;

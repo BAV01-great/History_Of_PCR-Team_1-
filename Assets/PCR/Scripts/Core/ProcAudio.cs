@@ -4,7 +4,6 @@ using UnityEngine;
 
 namespace PCR
 {
-    /// <summary>Procedurally generated sound effects, so the scenes have audio feedback with zero audio assets.</summary>
     public static class ProcAudio
     {
         const int SampleRate = 44100;
@@ -59,7 +58,6 @@ namespace PCR
             }
         }
 
-        /// <summary>Quiet lab-equipment hum. Frequencies are whole Hz over a 2 s loop so it loops without a click.</summary>
         public static AudioClip LabHum => Make("labhum", 2f, (t, u) =>
         {
             float am = 0.75f + 0.25f * Sin(2f, t);

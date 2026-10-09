@@ -5,21 +5,12 @@ using UnityEngine;
 
 namespace PCR.EditorTools
 {
-    /// <summary>
-    /// Non-destructive upgrade of the team's Blender models (Assets/Resources/PCRModels) and the CC0 lab props (Assets/Resources/LabAssets):
-    ///  - import settings tuned for Quest: mesh compression, no read/write, vertex/polygon optimisation, no cameras/lights/animation,
-    ///    and smoother shading on the organic DNA/Taq pieces;
-    ///  - one shared, glossy, subtly glowing URP material per colour in the handoff colour key, remapped onto every model
-    ///    (a handful of materials for the whole molecule set = batching-friendly, GPU instancing on).
-    /// The original FBX files are never modified. Run: PCR Tools > 4 - Upgrade Team Models.
-    /// </summary>
     public class PcrModelPostprocessor : AssetPostprocessor
     {
         const string TeamFolder = "/Resources/PCRModels/";
         const string LabFolder = "/Resources/LabAssets/";
         const string ExtrasFolder = "/Resources/LabExtras/";
 
-        // Textures for the sourced lab extras: 1K max, crunch-compressed, mipmapped; *_nor_* are normal maps.
         void OnPreprocessTexture()
         {
             if (!assetPath.Contains(ExtrasFolder)) return;
@@ -32,14 +23,12 @@ namespace PCR.EditorTools
             if (assetPath.Contains("_nor_")) t.textureType = TextureImporterType.NormalMap;
         }
 
-        // bump when the import rules change so Unity re-imports the models
         public override uint GetVersion() => 3;
 
         void OnPreprocessModel()
         {
             if (assetPath.Contains("/Resources/PCRModels/Hands/"))
             {
-                // the rigged hand models keep their skin and bones (the finger bones are driven by GloveHands)
                 var hm = (ModelImporter)assetImporter;
                 hm.animationType = ModelImporterAnimationType.Generic;
                 hm.importAnimation = false;
@@ -66,7 +55,6 @@ namespace PCR.EditorTools
             m.generateSecondaryUV = false;
             if (team)
             {
-                // Smoother, rounder-looking DNA without adding triangles
                 m.importNormals = ModelImporterNormals.Calculate;
                 m.normalCalculationMode = ModelImporterNormalCalculationMode.AreaAndAngleWeighted;
                 m.normalSmoothingAngle = 70f;
@@ -80,7 +68,6 @@ namespace PCR.EditorTools
 
         struct Spec { public string Name; public Color Color; public float Emission; public float Smoothness; public float Metallic; }
 
-        // Colour key from History_of_PCR_3D_Asset_Handoff.docx
         static readonly Spec[] Specs =
         {
             new Spec { Name = "Mat_Backbone_A",        Color = new Color(0.30f, 0.33f, 0.38f), Emission = 0.15f, Smoothness = 0.60f },
@@ -134,10 +121,9 @@ namespace PCR.EditorTools
                 if (imp == null) continue;
                 foreach (var kv in mats)
                     imp.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), kv.Key), kv.Value);
-                imp.SaveAndReimport(); // also re-runs OnPreprocessModel
+                imp.SaveAndReimport();
                 count++;
             }
-            // lab props: import settings only (their colours come from the shared atlas and are tinted at runtime)
             foreach (var guid in AssetDatabase.FindAssets("t:Model", new[] { "Assets/Resources/LabAssets" }))
                 AssetDatabase.ImportAsset(AssetDatabase.GUIDToAssetPath(guid), ImportAssetOptions.ForceUpdate);
 

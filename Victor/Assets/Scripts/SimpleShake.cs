@@ -1,13 +1,11 @@
 using UnityEngine;
 
-// Shakes an object while enabled. Enable it when heating starts, disable it to stop.
-// On disable, the object returns to its original local position.
 public class SimpleShake : MonoBehaviour
 {
-    public float intensity = 0.01f;   // max offset in meters (0.01 = 1 cm)
-    public float speed = 40f;         // higher = faster, more frantic shake
+    public float intensity = 0.01f;
+    public float speed = 40f;
     public bool shakeRotation = false;
-    public float rotationAmount = 3f; // degrees, used if shakeRotation is on
+    public float rotationAmount = 3f;
 
     Vector3 startPos;
     Quaternion startRot;
@@ -17,7 +15,7 @@ public class SimpleShake : MonoBehaviour
     {
         startPos = transform.localPosition;
         startRot = transform.localRotation;
-        seed = Random.value * 100f; // so multiple objects don't shake in sync
+        seed = Random.value * 100f;
     }
 
     void Update()
