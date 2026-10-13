@@ -34,7 +34,6 @@
 *.pdb
 *.apk
 *.aab
-*.unitypackage
 
 # OS and editor
 .DS_Store
